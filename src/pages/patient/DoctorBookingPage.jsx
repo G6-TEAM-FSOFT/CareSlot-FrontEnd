@@ -208,28 +208,7 @@ export const DoctorBookingPage = () => {
   const activePatient = patients.find((p) => String(p.id) === String(selectedPatientId));
 
   return (
-    <div className="bg-slate-50 min-h-screen pb-12 font-sans">
-      {/* Top Banner Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4 mb-6 shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-sm">
-              +
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-sky-900 uppercase tracking-tight">
-                Bệnh Viện ĐH Y Hà Nội
-              </h1>
-              <p className="text-xs text-slate-500">HANOI MEDICAL UNIVERSITY HOSPITAL</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <span className="text-xs text-slate-500 block font-medium">Hotline tư vấn</span>
-            <span className="text-lg font-extrabold text-red-600 tracking-wide">1900 6422</span>
-          </div>
-        </div>
-      </div>
-
+    <div className="bg-slate-50 min-h-screen pt-6 pb-12 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
