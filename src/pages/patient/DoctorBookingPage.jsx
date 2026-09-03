@@ -12,10 +12,12 @@ import {
   Phone,
   Plus,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  CreditCard
 } from 'lucide-react';
 import { clinicService, doctorService, slotService, appointmentService, specialtyService } from '../../services/clinicService';
 import { patientService } from '../../services/patientService';
+import { PaymentModal } from '../../components/payment/PaymentModal';
 import { useNavigate } from 'react-router-dom';
 
 export const DoctorBookingPage = () => {
@@ -51,6 +53,10 @@ export const DoctorBookingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(null);
   const [bookingError, setBookingError] = useState('');
+
+  // Payment Modal state
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentAppointment, setPaymentAppointment] = useState(null);
 
   // Initial Load: Patients, Clinics, Specialties, Doctors
   useEffect(() => {
@@ -184,6 +190,8 @@ export const DoctorBookingPage = () => {
       const res = await appointmentService.createAppointment(bookingData);
       const createdData = res?.data || res;
       setBookingSuccess(createdData);
+      setPaymentAppointment(createdData);
+      setShowPaymentModal(true);
 
       // Reset selection
       setSelectedSlot(null);
@@ -395,20 +403,33 @@ export const DoctorBookingPage = () => {
 
             {/* Notification alert if booking success */}
             {bookingSuccess && (
-              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 space-y-1">
+              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 space-y-2">
                 <div className="flex items-center gap-2 font-bold text-sm">
                   <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                  <span>Đặt khám thành công! Mã booking: {bookingSuccess.bookingCode || 'CS-SUCCESS'}</span>
+                  <span>Tạo đơn đặt khám thành công! Mã booking: {bookingSuccess.bookingCode || 'CS-SUCCESS'}</span>
                 </div>
                 <p className="text-xs text-emerald-700">
-                  Lịch khám của bạn đã được xác nhận vào lúc {bookingSuccess.startTime} - {bookingSuccess.appointmentDate}.
+                  Lịch khám của bạn đang được tạm giữ trong 10 phút. Vui lòng thanh toán tiền cọc 100.000 đ để hoàn tất xác nhận.
                 </p>
-                <button
-                  onClick={() => navigate('/history')}
-                  className="text-xs text-emerald-800 underline font-semibold mt-1 block"
-                >
-                  Xem danh sách lịch khám của tôi &rarr;
-                </button>
+                <div className="flex items-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentAppointment(bookingSuccess);
+                      setShowPaymentModal(true);
+                    }}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    <span>Thanh toán cọc ngay qua VNPay &rarr;</span>
+                  </button>
+                  <button
+                    onClick={() => navigate('/history')}
+                    className="text-xs text-emerald-800 underline font-semibold"
+                  >
+                    Xem lịch khám
+                  </button>
+                </div>
               </div>
             )}
 
@@ -655,6 +676,13 @@ export const DoctorBookingPage = () => {
 
         </div>
       </div>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        appointment={paymentAppointment}
+      />
     </div>
   );
 };

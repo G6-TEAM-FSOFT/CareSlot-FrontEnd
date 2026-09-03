@@ -11,6 +11,7 @@ import { DoctorBookingPage } from '../pages/patient/DoctorBookingPage';
 import { PatientProfilesPage } from '../pages/patient/PatientProfilesPage';
 import { AiSuggestPage } from '../pages/patient/AiSuggestPage';
 import { AppointmentHistoryPage } from '../pages/patient/AppointmentHistoryPage';
+import { VNPayCallbackPage } from '../pages/patient/VNPayCallbackPage';
 
 import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
@@ -32,6 +33,7 @@ export const AppRoutes = () => {
         <Route path="/patients" element={<PatientProfilesPage />} />
         <Route path="/ai-suggest" element={<AiSuggestPage />} />
         <Route path="/history" element={<AppointmentHistoryPage />} />
+        <Route path="/payment/vnpay-callback" element={<VNPayCallbackPage />} />
       </Route>
 
 
