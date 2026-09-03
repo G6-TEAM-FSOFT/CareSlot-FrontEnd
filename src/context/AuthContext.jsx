@@ -24,6 +24,11 @@ export const AuthProvider = ({ children }) => {
     setToken(authToken);
     localStorage.setItem('care_slot_token', authToken);
     localStorage.setItem('care_slot_user', JSON.stringify(userData));
+    if (userData.clinicId) {
+      localStorage.setItem('care_slot_clinic_id', userData.clinicId);
+    } else {
+      localStorage.setItem('care_slot_clinic_id', '1');
+    }
   };
 
   const logout = () => {
@@ -31,6 +36,7 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     localStorage.removeItem('care_slot_token');
     localStorage.removeItem('care_slot_user');
+    localStorage.removeItem('care_slot_clinic_id');
   };
 
   return (

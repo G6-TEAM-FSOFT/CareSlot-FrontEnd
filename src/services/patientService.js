@@ -10,6 +10,7 @@ const INITIAL_MOCK_PROFILE = {
 };
 
 export const patientService = {
+  // Primary Profile APIs (T-023)
   getPrimaryProfile: async () => {
     try {
       return await api.get('/patients/me/primary');
@@ -26,6 +27,7 @@ export const patientService = {
       return { data: INITIAL_MOCK_PROFILE };
     }
   },
+
   updatePrimaryProfile: async (profileData) => {
     try {
       return await api.put('/patients/me/primary', profileData);
@@ -37,5 +39,26 @@ export const patientService = {
       return { data: profileData };
     }
   },
-};
 
+  // Patient / Relative Profiles APIs
+  getPatients: async (keyword = '') => {
+    const params = keyword ? { keyword } : {};
+    return await api.get('/patients', { params });
+  },
+
+  getPatientById: async (id) => {
+    return await api.get(`/patients/${id}`);
+  },
+
+  createPatient: async (patientData) => {
+    return await api.post('/patients', patientData);
+  },
+
+  updatePatient: async (id, patientData) => {
+    return await api.put(`/patients/${id}`, patientData);
+  },
+
+  deletePatient: async (id) => {
+    return await api.delete(`/patients/${id}`);
+  },
+};
