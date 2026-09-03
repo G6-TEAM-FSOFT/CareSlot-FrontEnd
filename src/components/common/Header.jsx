@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Stethoscope, User, LogOut, Calendar, Sparkles } from 'lucide-react';
+import { ROLES } from '../../config/constants';
 
 export const Header = () => {
   const { user, logout } = useAuth();
@@ -32,7 +33,16 @@ export const Header = () => {
         <div className="flex items-center space-x-4">
           {user ? (
             <div className="flex items-center space-x-3">
-              <Link to="/history" className="flex items-center gap-1 text-sm font-medium text-slate-700 hover:text-indigo-600">
+              {user.role === ROLES.PATIENT && (
+                <Link
+                  to="/patient/profile"
+                  className="flex items-center gap-1 text-sm font-medium text-slate-700 hover:text-indigo-600 transition"
+                >
+                  <User className="w-4 h-4" />
+                  Hồ sơ cá nhân
+                </Link>
+              )}
+              <Link to="/history" className="flex items-center gap-1 text-sm font-medium text-slate-700 hover:text-indigo-600 transition">
                 <Calendar className="w-4 h-4" />
                 Lịch sử đặt
               </Link>
@@ -41,7 +51,7 @@ export const Header = () => {
                   logout();
                   navigate('/auth/login');
                 }}
-                className="flex items-center gap-1 text-sm font-medium text-rose-600 hover:text-rose-700 px-3 py-1.5 rounded-lg bg-rose-50 transition"
+                className="flex items-center gap-1 text-sm font-medium text-rose-600 hover:text-rose-700 px-3 py-1.5 rounded-lg bg-rose-50 transition cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
                 Đăng xuất

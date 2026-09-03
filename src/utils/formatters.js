@@ -16,6 +16,30 @@ export const formatDate = (dateString) => {
   }).format(date);
 };
 
+export const formatDateDisplay = (dateString) => {
+  if (!dateString) return '';
+  if (typeof dateString === 'string') {
+    const parts = dateString.split('T')[0].split('-');
+    if (parts.length === 3 && parts[0].length === 4) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+  }
+  return formatDate(dateString);
+};
+
+export const getAvatarInitial = (name) => {
+  if (!name || typeof name !== 'string') return 'P';
+  const trimmed = name.trim();
+  if (!trimmed) return 'P';
+  const parts = trimmed.split(/\s+/);
+  if (parts.length === 1) {
+    return parts[0].charAt(0).toUpperCase();
+  }
+  const first = parts[0].charAt(0);
+  const last = parts[parts.length - 1].charAt(0);
+  return `${first}${last}`.toUpperCase();
+};
+
 export const formatTime = (timeString) => {
   if (!timeString) return '';
   const date = new Date(`1970-01-01T${timeString}`);
@@ -24,3 +48,5 @@ export const formatTime = (timeString) => {
     minute: '2-digit',
   }).format(date);
 };
+
+
