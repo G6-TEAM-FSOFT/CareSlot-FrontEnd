@@ -60,11 +60,10 @@ export const LoginPage = () => {
         <button
           type="button"
           onClick={() => setSelectedRole(ROLES.CLINIC_STAFF)}
-          className={`py-2 px-1 rounded-lg flex items-center justify-center gap-1 transition ${
-            selectedRole === ROLES.CLINIC_STAFF
+          className={`py-2 px-1 rounded-lg flex items-center justify-center gap-1 transition ${selectedRole === ROLES.CLINIC_STAFF
               ? 'bg-cyan-600 text-white shadow'
               : 'text-slate-600 hover:text-slate-900'
-          }`}
+            }`}
         >
           <Hospital className="w-3.5 h-3.5" />
           <span>Clinic Staff</span>
@@ -73,11 +72,10 @@ export const LoginPage = () => {
         <button
           type="button"
           onClick={() => setSelectedRole(ROLES.PATIENT)}
-          className={`py-2 px-1 rounded-lg flex items-center justify-center gap-1 transition ${
-            selectedRole === ROLES.PATIENT
+          className={`py-2 px-1 rounded-lg flex items-center justify-center gap-1 transition ${selectedRole === ROLES.PATIENT
               ? 'bg-indigo-600 text-white shadow'
               : 'text-slate-600 hover:text-slate-900'
-          }`}
+            }`}
         >
           <UserCheck className="w-3.5 h-3.5" />
           <span>Bệnh nhân</span>
@@ -86,35 +84,13 @@ export const LoginPage = () => {
         <button
           type="button"
           onClick={() => setSelectedRole(ROLES.ADMIN)}
-          className={`py-2 px-1 rounded-lg flex items-center justify-center gap-1 transition ${
-            selectedRole === ROLES.ADMIN
+          className={`py-2 px-1 rounded-lg flex items-center justify-center gap-1 transition ${selectedRole === ROLES.ADMIN
               ? 'bg-slate-800 text-white shadow'
               : 'text-slate-600 hover:text-slate-900'
-          }`}
+            }`}
         >
           <ShieldCheck className="w-3.5 h-3.5" />
           <span>Admin</span>
-        </button>
-      </div>
-
-      {/* Quick Access Card for Clinic Staff */}
-      <div className="p-4 rounded-xl bg-cyan-950/10 border border-cyan-500/30 space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-cyan-700 uppercase tracking-wider flex items-center gap-1">
-            <Hospital className="w-4 h-4 text-cyan-600" />
-            Đăng nhập Nhanh Demo Clinic Staff
-          </span>
-        </div>
-        <p className="text-[11px] text-slate-600">
-          Tài khoản: <strong className="font-mono text-slate-800">staff@clinic.com</strong> | Mật khẩu: <strong className="font-mono text-slate-800">123456</strong>
-        </p>
-        <button
-          type="button"
-          onClick={handleQuickLoginStaff}
-          className="w-full mt-1 py-2 px-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold rounded-lg shadow transition flex items-center justify-center gap-1.5"
-        >
-          <span>Vào ngay Portal Clinic Partner (US-05 - US-24)</span>
-          <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </div>
 

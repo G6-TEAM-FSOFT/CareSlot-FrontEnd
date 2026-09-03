@@ -1,13 +1,13 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { 
-  Building2, 
-  Stethoscope, 
-  UserCheck, 
-  CalendarClock, 
-  ClipboardList, 
-  LogOut, 
-  Home, 
+import {
+  Building2,
+  Stethoscope,
+  UserCheck,
+  CalendarClock,
+  ClipboardList,
+  LogOut,
+  Home,
   ShieldCheck,
   Hospital
 } from 'lucide-react';
@@ -27,31 +27,26 @@ export const ClinicPartnerLayout = () => {
       to: '/clinic-partner/profile',
       label: 'Thông tin Phòng khám',
       icon: Building2,
-      badge: 'US-05'
     },
     {
       to: '/clinic-partner/specialties',
       label: 'Quản lý Chuyên khoa',
       icon: Stethoscope,
-      badge: 'US-07'
     },
     {
       to: '/clinic-partner/doctors',
       label: 'Quản lý Bác sĩ',
       icon: UserCheck,
-      badge: 'US-08'
     },
     {
       to: '/clinic-partner/slots',
       label: 'Lịch khám & Slots (Excel)',
       icon: CalendarClock,
-      badge: 'US-09/10'
     },
     {
       to: '/clinic-partner/appointments',
       label: 'Danh sách Lịch hẹn',
       icon: ClipboardList,
-      badge: 'US-12/24'
     },
   ];
 
@@ -85,10 +80,9 @@ export const ClinicPartnerLayout = () => {
                   key={item.to}
                   to={item.to}
                   className={({ isActive }) =>
-                    `flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium ${
-                      isActive
-                        ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-600/20 scale-[1.01]'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    `flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium ${isActive
+                      ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-600/20 scale-[1.01]'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                     }`
                   }
                 >
@@ -96,9 +90,6 @@ export const ClinicPartnerLayout = () => {
                     <Icon className="w-5 h-5 shrink-0" />
                     <span>{item.label}</span>
                   </div>
-                  <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
-                    {item.badge}
-                  </span>
                 </NavLink>
               );
             })}
