@@ -29,7 +29,7 @@ export const LoginPage = () => {
     } else if (selectedRole === ROLES.ADMIN) {
       navigate('/admin/dashboard');
     } else if (selectedRole === ROLES.PATIENT) {
-      navigate('/patient/profile');
+      navigate('/patients');
     } else {
       navigate('/');
     }
