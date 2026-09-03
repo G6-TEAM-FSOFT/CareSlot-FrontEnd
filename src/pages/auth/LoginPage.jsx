@@ -11,8 +11,8 @@ export const LoginPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     // Demo login for base structure verification
-    login({ username, role: 'ROLE_PATIENT' }, 'mock-jwt-token');
-    navigate('/');
+    login({ username: username || 'patient_demo', role: 'ROLE_PATIENT' }, 'mock-jwt-token');
+    navigate('/patient/profile');
   };
 
   return (

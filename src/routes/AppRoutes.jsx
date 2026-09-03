@@ -10,6 +10,7 @@ import { HomePage } from '../pages/patient/HomePage';
 import { ClinicSearchPage } from '../pages/patient/ClinicSearchPage';
 import { AiSuggestPage } from '../pages/patient/AiSuggestPage';
 import { AppointmentHistoryPage } from '../pages/patient/AppointmentHistoryPage';
+import { PatientProfilePage } from '../pages/patient/PatientProfilePage';
 
 import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
@@ -28,6 +29,10 @@ export const AppRoutes = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/clinics" element={<ClinicSearchPage />} />
         <Route path="/ai-suggest" element={<AiSuggestPage />} />
+
+        <Route element={<ProtectedRoute allowedRoles={[ROLES.PATIENT]} />}>
+          <Route path="/patient/profile" element={<PatientProfilePage />} />
+        </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.PATIENT, ROLES.CLINIC, ROLES.ADMIN]} />}>
           <Route path="/history" element={<AppointmentHistoryPage />} />
