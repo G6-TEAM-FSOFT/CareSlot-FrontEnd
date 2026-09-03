@@ -13,6 +13,7 @@ import { PatientProfilesPage } from '../pages/patient/PatientProfilesPage';
 import { AiSuggestPage } from '../pages/patient/AiSuggestPage';
 import { AppointmentHistoryPage } from '../pages/patient/AppointmentHistoryPage';
 import { PatientProfilePage } from '../pages/patient/PatientProfilePage';
+import { VNPayCallbackPage } from '../pages/patient/VNPayCallbackPage';
 
 import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
@@ -48,6 +49,7 @@ export const AppRoutes = () => {
         <Route element={<ProtectedRoute allowedRoles={[ROLES.PATIENT, ROLES.CLINIC, ROLES.CLINIC_STAFF, ROLES.ADMIN]} />}>
           <Route path="/history" element={<AppointmentHistoryPage />} />
         </Route>
+        <Route path="/payment/vnpay-callback" element={<VNPayCallbackPage />} />
       </Route>
 
       {/* Auth Routes */}

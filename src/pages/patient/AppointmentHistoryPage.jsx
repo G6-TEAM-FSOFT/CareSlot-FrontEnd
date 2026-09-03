@@ -10,15 +10,21 @@ import {
   XCircle,
   ChevronRight,
   RefreshCw,
-  FileText
+  FileText,
+  CreditCard
 } from 'lucide-react';
 import { appointmentService } from '../../services/clinicService';
+import { PaymentModal } from '../../components/payment/PaymentModal';
 import { Link } from 'react-router-dom';
 
 export const AppointmentHistoryPage = () => {
   const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' | 'revisit'
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Payment Modal state
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentAppointment, setPaymentAppointment] = useState(null);
 
   // Cancel Modal state
   const [cancellingAppointment, setCancellingAppointment] = useState(null);
@@ -121,6 +127,13 @@ export const AppointmentHistoryPage = () => {
 
   const getStatusBadge = (status) => {
     switch (status) {
+      case 'PENDING_PAYMENT':
+        return (
+          <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 tracking-wide uppercase flex items-center gap-1">
+            <Clock className="w-3 h-3 text-amber-500 animate-pulse" />
+            <span>CHỜ THANH TOÁN (10P)</span>
+          </span>
+        );
       case 'CANCELLED':
         return (
           <span className="text-xs font-bold text-rose-600 tracking-wide uppercase">
@@ -268,6 +281,20 @@ export const AppointmentHistoryPage = () => {
                     <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4 border-t sm:border-t-0 border-slate-100 pt-3 sm:pt-0">
                       {getStatusBadge(apt.status)}
 
+                      {apt.status === 'PENDING_PAYMENT' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPaymentAppointment(apt);
+                            setShowPaymentModal(true);
+                          }}
+                          className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1"
+                        >
+                          <CreditCard className="w-3.5 h-3.5" />
+                          <span>Thanh toán ngay</span>
+                        </button>
+                      )}
+
                       {apt.status === 'CONFIRMED' && (
                         <button
                           type="button"
@@ -334,6 +361,13 @@ export const AppointmentHistoryPage = () => {
           </div>
         </div>
       )}
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        appointment={paymentAppointment}
+      />
     </div>
   );
 };
