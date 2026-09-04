@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useTransition } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, MapPin, Stethoscope, Filter, Building2, AlertCircle, RefreshCw, X } from 'lucide-react';
+import { Search, MapPin, Stethoscope, Filter, Building2, AlertCircle, RefreshCw, X, Navigation, Clock, ArrowUpDown, Loader2 } from 'lucide-react';
 import { clinicService, specialtyService } from '../../services/clinicService';
 import { ClinicCard } from '../../components/clinic/ClinicCard';
 import { ClinicFilterSidebar } from '../../components/clinic/ClinicFilterSidebar';
@@ -13,14 +13,22 @@ export const ClinicSearchPage = () => {
   const initialKeyword = searchParams.get('keyword') || '';
   const initialSpecialtyId = searchParams.get('specialtyId') ? Number(searchParams.get('specialtyId')) : '';
   const initialLocation = searchParams.get('location') || '';
+  const initialSortBy = searchParams.get('sortBy') || 'DEFAULT';
   const initialPage = searchParams.get('page') ? Number(searchParams.get('page')) : 0;
 
-  // Local filter states
+  // Search & Filter state (persisted to URL)
   const [keyword, setKeyword] = useState(initialKeyword);
   const [specialtyId, setSpecialtyId] = useState(initialSpecialtyId);
   const [location, setLocation] = useState(initialLocation);
+  const [sortBy, setSortBy] = useState(initialSortBy);
   const [page, setPage] = useState(initialPage);
   const [pageSize] = useState(10);
+
+  // Runtime Geolocation state (NEVER persisted to URL)
+  const [userLat, setUserLat] = useState(null);
+  const [userLng, setUserLng] = useState(null);
+  const [loadingLocation, setLoadingLocation] = useState(false);
+  const [locationNotice, setLocationNotice] = useState(null);
 
   // Data states
   const [clinics, setClinics] = useState([]);
@@ -47,12 +55,13 @@ export const ClinicSearchPage = () => {
     loadSpecialties();
   }, []);
 
-  // Sync state to URL search parameters
+  // Sync state to URL search parameters (exclude userLat/userLng)
   const updateUrlParams = useCallback((newFilters) => {
     const params = new URLSearchParams();
     if (newFilters.keyword) params.set('keyword', newFilters.keyword);
     if (newFilters.specialtyId) params.set('specialtyId', newFilters.specialtyId.toString());
     if (newFilters.location) params.set('location', newFilters.location);
+    if (newFilters.sortBy && newFilters.sortBy !== 'DEFAULT') params.set('sortBy', newFilters.sortBy);
     if (newFilters.page && newFilters.page > 0) params.set('page', newFilters.page.toString());
 
     setSearchParams(params, { replace: true });
@@ -66,10 +75,17 @@ export const ClinicSearchPage = () => {
       const params = {
         page,
         size: pageSize,
+        sortBy: sortBy || 'DEFAULT',
       };
       if (keyword.trim()) params.keyword = keyword.trim();
       if (specialtyId) params.specialtyId = specialtyId;
       if (location.trim()) params.location = location.trim();
+
+      // Only send runtime user coordinates if DISTANCE_ASC sort is active
+      if (sortBy === 'DISTANCE_ASC' && userLat != null && userLng != null) {
+        params.userLat = userLat;
+        params.userLng = userLng;
+      }
 
       const response = await clinicService.getAllClinics(params);
       const resData = response?.data || response;
@@ -93,19 +109,61 @@ export const ClinicSearchPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [keyword, specialtyId, location, page, pageSize]);
+  }, [keyword, specialtyId, location, sortBy, userLat, userLng, page, pageSize]);
 
   // Debounced trigger for search
   useEffect(() => {
     const timer = setTimeout(() => {
-      updateUrlParams({ keyword, specialtyId, location, page });
+      updateUrlParams({ keyword, specialtyId, location, sortBy, page });
       fetchClinics();
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [keyword, specialtyId, location, page, updateUrlParams, fetchClinics]);
+  }, [keyword, specialtyId, location, sortBy, userLat, userLng, page, updateUrlParams, fetchClinics]);
 
-  // Handlers
+  // Geolocation & Sort Handlers
+  const handleSortChange = (newSort) => {
+    setLocationNotice(null);
+    if (newSort === 'DISTANCE_ASC') {
+      if (userLat != null && userLng != null) {
+        setSortBy('DISTANCE_ASC');
+        setPage(0);
+        return;
+      }
+
+      if (!navigator.geolocation) {
+        setLocationNotice('Trình duyệt của bạn không hỗ trợ định vị vị trí.');
+        return;
+      }
+
+      setLoadingLocation(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLat(position.coords.latitude);
+          setUserLng(position.coords.longitude);
+          setSortBy('DISTANCE_ASC');
+          setPage(0);
+          setLoadingLocation(false);
+          setLocationNotice(null);
+        },
+        (geoError) => {
+          console.warn('Geolocation error:', geoError);
+          setLoadingLocation(false);
+          if (geoError.code === geoError.PERMISSION_DENIED) {
+            setLocationNotice('Vui lòng cho phép truy cập vị trí trên trình duyệt để sử dụng tính năng tìm phòng khám gần bạn.');
+          } else {
+            setLocationNotice('Không thể lấy vị trí hiện tại. Vui lòng kiểm tra lại cài đặt GPS/mạng.');
+          }
+          setSortBy('DEFAULT');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    } else {
+      setSortBy(newSort);
+      setPage(0);
+    }
+  };
+
   const handleKeywordChange = (val) => {
     setKeyword(val);
     setPage(0);
@@ -130,6 +188,10 @@ export const ClinicSearchPage = () => {
     setKeyword('');
     setSpecialtyId('');
     setLocation('');
+    setSortBy('DEFAULT');
+    setUserLat(null);
+    setUserLng(null);
+    setLocationNotice(null);
     setPage(0);
   };
 
@@ -151,8 +213,8 @@ export const ClinicSearchPage = () => {
             Lựa chọn phòng khám đạt chuẩn, xem bác sĩ theo chuyên khoa và giữ lịch khám nhanh chóng với mức cọc bảo đảm minh bạch.
           </p>
 
-          {/* Quick Stats or Active filter badges */}
-          {(keyword || specialtyId || location) && (
+          {/* Active filter badges */}
+          {(keyword || specialtyId || location || (sortBy && sortBy !== 'DEFAULT')) && (
             <div className="flex flex-wrap items-center gap-2 pt-2 text-xs">
               <span className="text-indigo-200">Đang lọc theo:</span>
               {keyword && (
@@ -173,6 +235,20 @@ export const ClinicSearchPage = () => {
                   <button onClick={() => handleLocationChange('')} className="hover:text-rose-300 ml-1">×</button>
                 </span>
               )}
+              {sortBy === 'DISTANCE_ASC' && (
+                <span className="inline-flex items-center gap-1 bg-emerald-500/40 backdrop-blur-md px-2.5 py-1 rounded-lg border border-emerald-300/40">
+                  <Navigation className="w-3 h-3 text-emerald-200" />
+                  <span>Sắp xếp: <strong>Gần tôi nhất</strong></span>
+                  <button onClick={() => handleSortChange('DEFAULT')} className="hover:text-rose-300 ml-1">×</button>
+                </span>
+              )}
+              {sortBy === 'EARLIEST_SLOT' && (
+                <span className="inline-flex items-center gap-1 bg-amber-500/40 backdrop-blur-md px-2.5 py-1 rounded-lg border border-amber-300/40">
+                  <Clock className="w-3 h-3 text-amber-200" />
+                  <span>Sắp xếp: <strong>Lịch khám sớm nhất</strong></span>
+                  <button onClick={() => handleSortChange('DEFAULT')} className="hover:text-rose-300 ml-1">×</button>
+                </span>
+              )}
               <button
                 onClick={handleResetFilters}
                 className="text-xs text-rose-200 hover:text-white underline font-semibold cursor-pointer"
@@ -187,6 +263,22 @@ export const ClinicSearchPage = () => {
         <div className="absolute right-0 top-0 -translate-y-1/4 translate-x-1/4 w-96 h-96 bg-white/10 rounded-full blur-2xl pointer-events-none" />
       </div>
 
+      {/* Geolocation Notice Toast/Alert */}
+      {locationNotice && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-2xl text-xs flex items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>{locationNotice}</span>
+          </div>
+          <button
+            onClick={() => setLocationNotice(null)}
+            className="text-amber-500 hover:text-amber-700 font-bold text-sm cursor-pointer"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* 2. Main Layout: Left Sidebar Filter + Right Results List */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Mobile filter toggle bar */}
@@ -196,8 +288,8 @@ export const ClinicSearchPage = () => {
             className="flex items-center gap-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3.5 py-2 rounded-xl transition cursor-pointer"
           >
             <Filter className="w-4 h-4 text-indigo-600" />
-            Bộ lọc tìm kiếm
-            {(keyword || specialtyId || location) && (
+            Bộ lọc & Sắp xếp
+            {(keyword || specialtyId || location || (sortBy && sortBy !== 'DEFAULT')) && (
               <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
             )}
           </button>
@@ -226,7 +318,7 @@ export const ClinicSearchPage = () => {
           <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex justify-end lg:hidden">
             <div className="bg-white w-full max-w-sm h-full p-6 overflow-y-auto space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 className="font-bold text-slate-800 text-sm">Bộ lọc tìm kiếm</h3>
+                <h3 className="font-bold text-slate-800 text-sm">Thông tin đặt khám</h3>
                 <button
                   onClick={() => setShowMobileFilter(false)}
                   className="p-1 rounded-lg hover:bg-slate-100 text-slate-500"
@@ -249,7 +341,7 @@ export const ClinicSearchPage = () => {
 
               <button
                 onClick={() => setShowMobileFilter(false)}
-                className="w-full py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl"
+                className="w-full py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl cursor-pointer"
               >
                 Xem {totalElements} kết quả
               </button>
@@ -259,14 +351,67 @@ export const ClinicSearchPage = () => {
 
         {/* Clinic Cards Results Column (Right 8 cols) */}
         <div className="lg:col-span-8 space-y-4">
-          {/* Top Results count header */}
-          <div className="hidden lg:flex items-center justify-between bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-xs">
-            <span className="text-xs text-slate-600 font-medium">
-              Tìm thấy <strong className="text-indigo-600 font-bold">{totalElements}</strong> cơ sở y tế đang hoạt động
-            </span>
-            <span className="text-xs text-slate-400">
-              Trang {page + 1} / {Math.max(1, totalPages)}
-            </span>
+          {/* Top Sort & Results Bar */}
+          <div className="bg-white px-4 py-3.5 sm:px-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            {/* Sort options */}
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <span className="text-xs font-bold text-slate-500 flex items-center gap-1 mr-1">
+                <ArrowUpDown className="w-3.5 h-3.5 text-indigo-600" />
+                Sắp xếp:
+              </span>
+
+              <button
+                type="button"
+                onClick={() => handleSortChange('DEFAULT')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                  sortBy === 'DEFAULT'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                Mặc định (A - Z)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSortChange('DISTANCE_ASC')}
+                disabled={loadingLocation}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                  sortBy === 'DISTANCE_ASC'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                {loadingLocation ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                ) : (
+                  <Navigation className={`w-3.5 h-3.5 ${sortBy === 'DISTANCE_ASC' ? 'text-emerald-300' : 'text-emerald-600'}`} />
+                )}
+                <span>Gần tôi nhất</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSortChange('EARLIEST_SLOT')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                  sortBy === 'EARLIEST_SLOT'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                <Clock className={`w-3.5 h-3.5 ${sortBy === 'EARLIEST_SLOT' ? 'text-amber-300' : 'text-amber-500'}`} />
+                <span>Có lịch khám sớm nhất</span>
+              </button>
+            </div>
+
+            {/* Results count info */}
+            <div className="flex items-center justify-between md:justify-end gap-2.5 text-xs text-slate-500 font-medium pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+              <span>
+                Tìm thấy <strong className="text-indigo-600 font-bold">{totalElements}</strong> cơ sở
+              </span>
+              <span className="text-slate-300">|</span>
+              <span>Trang {page + 1}/{Math.max(1, totalPages)}</span>
+            </div>
           </div>
 
           {/* Loading Skeleton state */}

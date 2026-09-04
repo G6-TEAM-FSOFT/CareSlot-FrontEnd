@@ -1,18 +1,5 @@
 import React from 'react';
-import { Search, MapPin, Stethoscope, RotateCcw, Filter, Check } from 'lucide-react';
-
-const COMMON_LOCATIONS = [
-  'Tất cả khu vực',
-  'Hà Nội',
-  'TP. Hồ Chí Minh',
-  'Đống Đa',
-  'Cầu Giấy',
-  'Ba Đình',
-  'Hai Bà Trưng',
-  'Quận 1',
-  'Quận 5',
-  'Quận 10',
-];
+import { Search, MapPin, Stethoscope, RotateCcw, Calendar, Check } from 'lucide-react';
 
 export const ClinicFilterSidebar = ({
   keyword,
@@ -31,8 +18,8 @@ export const ClinicFilterSidebar = ({
     <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-6">
       <div className="flex items-center justify-between pb-3 border-b border-slate-100">
         <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
-          <Filter className="w-4 h-4 text-indigo-600" />
-          <span>Bộ Lọc Tìm Kiếm</span>
+          <Calendar className="w-4 h-4 text-indigo-600" />
+          <span>Thông tin đặt khám</span>
         </div>
         {hasActiveFilters && (
           <button
@@ -46,7 +33,7 @@ export const ClinicFilterSidebar = ({
         )}
       </div>
 
-      {/* 1. Tìm kiếm theo tên / từ khóa */}
+      {/* 2. Tìm kiếm theo tên / từ khóa */}
       <div className="space-y-2">
         <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
           <Search className="w-3.5 h-3.5 text-slate-400" />
@@ -71,7 +58,7 @@ export const ClinicFilterSidebar = ({
         </div>
       </div>
 
-      {/* 2. Lọc theo chuyên khoa */}
+      {/* 3. Lọc theo chuyên khoa */}
       <div className="space-y-2">
         <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
           <Stethoscope className="w-3.5 h-3.5 text-indigo-500" />
@@ -91,7 +78,7 @@ export const ClinicFilterSidebar = ({
         </select>
       </div>
 
-      {/* 3. Lọc theo khu vực */}
+      {/* 4. Lọc theo khu vực */}
       <div className="space-y-2">
         <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
           <MapPin className="w-3.5 h-3.5 text-rose-500" />
