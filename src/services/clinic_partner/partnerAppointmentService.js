@@ -10,4 +10,7 @@ export const partnerAppointmentService = {
   getAppointmentLifecycleLogs: async (id) => {
     return await api.get(`/partner/appointments/${id}/logs`);
   },
+  checkInAppointment: async (id) => {
+    return await api.patch(`/partner/appointments/${id}/check-in`);
+  },
 };
