@@ -9,6 +9,18 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
+    const savedUser = localStorage.getItem('care_slot_user');
+    if (savedUser) {
+      try {
+        const user = JSON.parse(savedUser);
+        if (user && user.id && !config.headers['X-User-Id']) {
+          config.headers['X-User-Id'] = user.id;
+        }
+      } catch (e) {
+        // ignore JSON parse error
+      }
+    }
+
     const token = localStorage.getItem('care_slot_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

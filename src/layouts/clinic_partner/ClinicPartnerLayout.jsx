@@ -110,20 +110,13 @@ export const ClinicPartnerLayout = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <NavLink
-              to="/"
-              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition"
-            >
-              <Home className="w-4 h-4" />
-              <span>Trang Patient</span>
-            </NavLink>
+          <div>
             <button
               onClick={handleLogout}
-              className="flex items-center justify-center p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
-              title="Đăng xuất"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition cursor-pointer border border-rose-100"
             >
               <LogOut className="w-4 h-4" />
+              <span>Đăng xuất</span>
             </button>
           </div>
         </div>
