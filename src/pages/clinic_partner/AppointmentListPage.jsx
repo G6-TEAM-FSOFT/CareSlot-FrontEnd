@@ -85,9 +85,6 @@ export const AppointmentListPage = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 text-xs font-mono font-bold rounded-full bg-cyan-100 text-cyan-700 border border-cyan-200">
-              US-12 & US-11
-            </span>
             <h1 className="text-2xl font-bold text-slate-900">Tra cứu Lịch hẹn Phòng khám</h1>
           </div>
           <p className="text-sm text-slate-500 mt-1">
@@ -95,13 +92,13 @@ export const AppointmentListPage = () => {
           </p>
         </div>
 
-        <button
+        {/* <button
           onClick={loadAppointments}
           className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-semibold hover:bg-slate-100 transition shadow-sm cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>Làm mới</span>
-        </button>
+        </button> */}
       </div>
 
       {/* Alerts */}

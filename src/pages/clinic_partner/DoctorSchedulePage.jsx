@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  CalendarClock, 
-  Plus, 
-  FileSpreadsheet, 
-  RefreshCw, 
-  AlertCircle, 
-  CheckCircle2, 
-  UserCheck, 
-  Clock, 
-  MapPin, 
+import {
+  CalendarClock,
+  Plus,
+  FileSpreadsheet,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2,
+  UserCheck,
+  Clock,
+  MapPin,
   Layers,
   Calendar,
   X,
@@ -137,7 +137,7 @@ export const DoctorSchedulePage = () => {
       console.error('Failed to create slot', err);
       const msg = err.message || err.response?.data?.message || '';
       if (msg.includes('overlap') || msg.includes('3004') || err.code === 3004) {
-        setModalError('⚠️ LỖI CHỒNG LẤN LỊCH (OVERLAPS): Khung giờ khám này của Bác sĩ đã bị trùng lấn với một ca khám sẵn có! Vui lòng chọn khung giờ khác (US-09).');
+        setModalError('⚠️ LỖI CHỒNG LẤN LỊCH (OVERLAPS): Khung giờ khám này của Bác sĩ đã bị trùng lấn với một ca khám sẵn có! Vui lòng chọn khung giờ khác');
       } else {
         setModalError(`Tạo ca khám thất bại: ${msg || 'Không thể tạo slot mới.'}`);
       }
@@ -221,7 +221,7 @@ export const DoctorSchedulePage = () => {
       console.error('Failed to create batch slots', err);
       const msg = err.message || err.response?.data?.message || '';
       if (msg.includes('overlap') || msg.includes('3004') || err.code === 3004) {
-        setModalError('⚠️ LỖI CHỒNG LẤN LỊCH (OVERLAPS): Khung giờ trong batch tạo trùng lấn với lịch khám hiện có của bác sĩ (US-09).');
+        setModalError('⚠️ LỖI CHỒNG LẤN LỊCH (OVERLAPS): Khung giờ trong batch tạo trùng lấn với lịch khám hiện có của bác sĩ');
       } else {
         setModalError(`Tạo batch slot thất bại: ${msg}`);
       }
@@ -236,9 +236,6 @@ export const DoctorSchedulePage = () => {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 text-xs font-mono font-bold rounded-full bg-cyan-100 text-cyan-700 border border-cyan-200">
-              US-09 & US-10
-            </span>
             <h1 className="text-2xl font-bold text-slate-900">Quản lý Ca khám & Lịch làm việc</h1>
           </div>
           <p className="text-sm text-slate-500 mt-1">
@@ -332,7 +329,7 @@ export const DoctorSchedulePage = () => {
           </select>
         </div>
 
-        <div className="flex items-end">
+        {/* <div className="flex items-end">
           <button
             onClick={fetchSlots}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition"
@@ -340,7 +337,7 @@ export const DoctorSchedulePage = () => {
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Tải lại dữ liệu</span>
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Slot List */}
@@ -373,15 +370,14 @@ export const DoctorSchedulePage = () => {
                 </div>
 
                 <span
-                  className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border ${
-                    slot.status === 'AVAILABLE'
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : slot.status === 'HELD'
+                  className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border ${slot.status === 'AVAILABLE'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : slot.status === 'HELD'
                       ? 'bg-amber-50 text-amber-700 border-amber-200'
                       : slot.status === 'BOOKED'
-                      ? 'bg-blue-50 text-blue-700 border-blue-200'
-                      : 'bg-purple-50 text-purple-700 border-purple-200'
-                  }`}
+                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        : 'bg-purple-50 text-purple-700 border-purple-200'
+                    }`}
                 >
                   {slot.status}
                 </span>

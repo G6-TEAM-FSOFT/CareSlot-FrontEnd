@@ -76,7 +76,6 @@ export const ExcelImportModal = ({ isOpen, onClose, onSuccess }) => {
             </div>
             <div>
               <h3 className="text-lg font-bold text-slate-900">Import Lịch làm việc bằng Excel</h3>
-              <p className="text-xs text-slate-500">US-09: Thêm hàng loạt ca khám khả dụng cho bác sĩ từ file mẫu</p>
             </div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100">

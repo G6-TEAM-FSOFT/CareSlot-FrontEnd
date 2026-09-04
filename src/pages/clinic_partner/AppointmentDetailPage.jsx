@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  History, 
-  RefreshCw, 
-  AlertCircle, 
-  Calendar, 
-  User, 
-  Stethoscope, 
-  Building2, 
-  CheckCircle2, 
-  XCircle, 
-  CreditCard, 
+import {
+  ArrowLeft,
+  History,
+  RefreshCw,
+  AlertCircle,
+  Calendar,
+  User,
+  Stethoscope,
+  Building2,
+  CheckCircle2,
+  XCircle,
+  CreditCard,
   ShieldCheck,
   FileText
 } from 'lucide-react';
@@ -115,9 +115,6 @@ export const AppointmentDetailPage = () => {
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-1 text-xs font-mono font-bold rounded-full bg-cyan-100 text-cyan-700 border border-cyan-200">
-                US-24 & US-12
-              </span>
               <h1 className="text-2xl font-bold text-slate-900">
                 Chi tiết Booking #{appointment?.bookingCode || id}
               </h1>
@@ -128,13 +125,13 @@ export const AppointmentDetailPage = () => {
           </div>
         </div>
 
-        <button
+        {/* <button
           onClick={loadData}
           className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:text-slate-900 transition shadow-sm"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>Làm mới timeline</span>
-        </button>
+        </button> */}
       </div>
 
       {/* Alerts */}
@@ -236,7 +233,7 @@ export const AppointmentDetailPage = () => {
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
         <div className="flex items-center gap-2 border-b border-slate-200 pb-4">
           <History className="w-5 h-5 text-cyan-600" />
-          <h2 className="text-lg font-bold text-slate-900">Timeline Nhật ký Vòng đời Booking (US-24)</h2>
+          <h2 className="text-lg font-bold text-slate-900">Timeline Nhật ký Vòng đời Booking</h2>
         </div>
 
         {logs.length === 0 ? (

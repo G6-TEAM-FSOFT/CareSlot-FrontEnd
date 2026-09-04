@@ -229,8 +229,8 @@ export const DoctorBookingPage = () => {
                     type="button"
                     onClick={() => setBookingMode('doctor')}
                     className={`py-2 text-xs font-bold rounded-lg transition ${bookingMode === 'doctor'
-                        ? 'bg-sky-600 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-sky-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
                       }`}
                   >
                     Bác sĩ
@@ -239,8 +239,8 @@ export const DoctorBookingPage = () => {
                     type="button"
                     onClick={() => setBookingMode('specialty')}
                     className={`py-2 text-xs font-bold rounded-lg transition ${bookingMode === 'specialty'
-                        ? 'bg-sky-600 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-sky-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
                       }`}
                   >
                     Chuyên khoa
@@ -311,7 +311,7 @@ export const DoctorBookingPage = () => {
               )}
 
               {/* Chọn ngày khám (Range) */}
-              <div className="space-y-1.5">
+              {/* <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-600">Chọn ngày khám</label>
                 <div className="grid grid-cols-2 gap-2">
                   <input
@@ -327,9 +327,9 @@ export const DoctorBookingPage = () => {
                     className="bg-white border border-slate-300 rounded-xl px-2 py-1.5 text-xs text-slate-700 focus:ring-2 focus:ring-sky-500"
                   />
                 </div>
-              </div>
+              </div> */}
 
-              {/* Sử dụng Bảo hiểm y tế */}
+              {/* Sử dụng Bảo hiểm y tế
               <div className="space-y-2 pt-2 border-t border-slate-100">
                 <label className="text-xs font-semibold text-slate-600 block">Sử dụng Bảo hiểm y tế *</label>
                 <div className="flex items-center space-x-6 text-sm text-slate-700">
@@ -356,7 +356,7 @@ export const DoctorBookingPage = () => {
                     <span>Không</span>
                   </label>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -460,8 +460,8 @@ export const DoctorBookingPage = () => {
                             type="button"
                             onClick={() => handleToggleDoctor(doctor)}
                             className={`px-5 py-2 rounded-xl text-xs font-bold transition shadow-sm ${isExpanded
-                                ? 'bg-slate-700 hover:bg-slate-800 text-white'
-                                : 'bg-sky-600 hover:bg-sky-700 text-white'
+                              ? 'bg-slate-700 hover:bg-slate-800 text-white'
+                              : 'bg-sky-600 hover:bg-sky-700 text-white'
                               }`}
                           >
                             {isExpanded ? 'Ẩn lịch' : 'Chọn'}
@@ -482,8 +482,8 @@ export const DoctorBookingPage = () => {
                                   type="button"
                                   onClick={() => handleDateChange(d.dateStr)}
                                   className={`px-4 py-2 rounded-xl text-xs font-bold border transition ${selectedSlotDate === d.dateStr
-                                      ? 'bg-sky-600 text-white border-sky-600 shadow-sm'
-                                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                                    ? 'bg-sky-600 text-white border-sky-600 shadow-sm'
+                                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                                     }`}
                                 >
                                   {d.label}
@@ -546,8 +546,8 @@ export const DoctorBookingPage = () => {
                                       type="button"
                                       onClick={() => setSelectedSlot(slot)}
                                       className={`px-3.5 py-2 rounded-xl text-xs font-semibold border transition ${isSelected
-                                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm ring-2 ring-emerald-300'
-                                          : 'bg-white text-slate-700 border-slate-200 hover:border-emerald-500 hover:text-emerald-700'
+                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm ring-2 ring-emerald-300'
+                                        : 'bg-white text-slate-700 border-slate-200 hover:border-emerald-500 hover:text-emerald-700'
                                         }`}
                                     >
                                       {timeDisplay}

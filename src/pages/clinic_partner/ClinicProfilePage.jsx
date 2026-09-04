@@ -100,9 +100,6 @@ export const ClinicProfilePage = () => {
       <div className="flex items-center justify-between pb-4 border-b border-slate-200">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 text-xs font-mono font-bold rounded-full bg-cyan-100 text-cyan-700 border border-cyan-200">
-              US-05
-            </span>
             <h1 className="text-2xl font-bold text-slate-900">Quản lý Thông tin Phòng khám</h1>
           </div>
           <p className="text-sm text-slate-500 mt-1">
@@ -110,13 +107,13 @@ export const ClinicProfilePage = () => {
           </p>
         </div>
 
-        <button
+        {/* <button
           onClick={fetchClinicProfile}
           className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 transition shadow-sm"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>Làm mới</span>
-        </button>
+        </button> */}
       </div>
 
       {/* Alerts */}

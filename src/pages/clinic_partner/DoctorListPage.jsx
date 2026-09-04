@@ -13,7 +13,7 @@ export const DoctorListPage = () => {
 
   const [selectedSpecialtyId, setSelectedSpecialtyId] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -112,9 +112,6 @@ export const DoctorListPage = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 text-xs font-mono font-bold rounded-full bg-cyan-100 text-cyan-700 border border-cyan-200">
-              US-08
-            </span>
             <h1 className="text-2xl font-bold text-slate-900">Quản lý Hồ sơ Bác sĩ</h1>
           </div>
           <p className="text-sm text-slate-500 mt-1">
@@ -227,11 +224,10 @@ export const DoctorListPage = () => {
                   </div>
 
                   <span
-                    className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
-                      doctor.status === 'ACTIVE'
+                    className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${doctor.status === 'ACTIVE'
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                         : 'bg-red-50 text-red-700 border-red-200'
-                    }`}
+                      }`}
                   >
                     {doctor.status || 'ACTIVE'}
                   </span>
@@ -272,11 +268,10 @@ export const DoctorListPage = () => {
               <div className="pt-4 mt-6 border-t border-slate-100 flex items-center justify-between">
                 <button
                   onClick={() => handleToggleStatus(doctor)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition ${
-                    doctor.status === 'ACTIVE'
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition ${doctor.status === 'ACTIVE'
                       ? 'text-amber-700 hover:bg-amber-50 border-amber-200'
                       : 'text-emerald-700 hover:bg-emerald-50 border-emerald-200'
-                  }`}
+                    }`}
                   title="Đổi trạng thái tiếp nhận"
                 >
                   {doctor.status === 'ACTIVE' ? (
