@@ -50,6 +50,16 @@ export const AppointmentDetailPage = () => {
     loadData();
   }, [id]);
 
+  const handleCheckIn = async () => {
+    if (!window.confirm('Xác nhận bệnh nhân đã đến phòng khám và tiến hành Check-in?')) return;
+    try {
+      await partnerAppointmentService.checkInAppointment(id);
+      loadData();
+    } catch (err) {
+      alert(err?.response?.data?.message || err?.data?.message || err?.message || 'Check-in thất bại. Chỉ được phép Check-in đúng ngày khám và trong vòng 2 tiếng trước giờ khám.');
+    }
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount || 0);
   };
@@ -59,18 +69,27 @@ export const AppointmentDetailPage = () => {
     switch (status) {
       case 'CONFIRMED':
       case 'APPOINTMENT_CONFIRMED':
+      case 'PAYMENT_SUCCESS':
         return <CheckCircle2 className="w-5 h-5 text-emerald-600" />;
       case 'CHECKED_IN':
-        return <ShieldCheck className="w-5 h-5 text-cyan-600" />;
-      case 'PAYMENT_SUCCESS':
+      case 'APPOINTMENT_CHECKED_IN':
+        return <ShieldCheck className="w-5 h-5 text-indigo-600" />;
       case 'PENDING_PAYMENT':
-        return <CreditCard className="w-5 h-5 text-blue-600" />;
-      case 'CANCELLED':
-      case 'HOLD_EXPIRED':
+      case 'APPOINTMENT_CREATED':
+        return <CreditCard className="w-5 h-5 text-amber-500" />;
+      case 'EXPIRED':
+      case 'HOLD_TIMEOUT':
       case 'PAYMENT_FAILED':
-        return <XCircle className="w-5 h-5 text-red-600" />;
+        return <AlertCircle className="w-5 h-5 text-rose-500" />;
+      case 'CANCELLED':
+      case 'APPOINTMENT_CANCELLED':
+        return <XCircle className="w-5 h-5 text-rose-600" />;
+      case 'REJECTED':
+      case 'APPOINTMENT_NO_SHOW':
+      case 'APPOINTMENT_REJECTED_OVERDUE':
+        return <XCircle className="w-5 h-5 text-rose-700" />;
       default:
-        return <History className="w-5 h-5 text-amber-600" />;
+        return <History className="w-5 h-5 text-slate-500" />;
     }
   };
 
@@ -142,6 +161,16 @@ export const AppointmentDetailPage = () => {
               <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                 {appointment.status || 'CONFIRMED'}
               </span>
+              {appointment.status === 'CONFIRMED' && (
+                <button
+                  type="button"
+                  onClick={handleCheckIn}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition cursor-pointer"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Xác nhận Check-in</span>
+                </button>
+              )}
             </div>
           </div>
 

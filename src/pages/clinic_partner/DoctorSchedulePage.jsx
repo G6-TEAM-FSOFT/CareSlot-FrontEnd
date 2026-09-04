@@ -328,6 +328,7 @@ export const DoctorSchedulePage = () => {
             <option value="AVAILABLE">AVAILABLE (Khả dụng)</option>
             <option value="HELD">HELD (Đang giữ chỗ)</option>
             <option value="BOOKED">BOOKED (Đã được đặt)</option>
+            <option value="OVER_DATE">OVER_DATE (Quá hạn / Quá ngày)</option>
           </select>
         </div>
 
@@ -377,7 +378,9 @@ export const DoctorSchedulePage = () => {
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                       : slot.status === 'HELD'
                       ? 'bg-amber-50 text-amber-700 border-amber-200'
-                      : 'bg-blue-50 text-blue-700 border-blue-200'
+                      : slot.status === 'BOOKED'
+                      ? 'bg-blue-50 text-blue-700 border-blue-200'
+                      : 'bg-purple-50 text-purple-700 border-purple-200'
                   }`}
                 >
                   {slot.status}

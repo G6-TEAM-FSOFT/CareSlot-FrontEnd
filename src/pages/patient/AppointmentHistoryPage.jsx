@@ -125,6 +125,26 @@ export const AppointmentHistoryPage = () => {
     }
   };
 
+  const isPastStartTime = (apt) => {
+    if (!apt || !apt.appointmentDate || !apt.startTime) return false;
+    try {
+      let dateStr = apt.appointmentDate;
+      if (Array.isArray(dateStr)) {
+        const [y, m, d] = dateStr;
+        dateStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      }
+      let timeStr = apt.startTime;
+      if (Array.isArray(timeStr)) {
+        const [h, min] = timeStr;
+        timeStr = `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}:00`;
+      }
+      const appointmentStart = new Date(`${dateStr}T${timeStr}`);
+      return Date.now() >= appointmentStart.getTime();
+    } catch (e) {
+      return false;
+    }
+  };
+
   const isAppointmentExpired = (apt) => {
     if (!apt) return false;
     if (apt.status === 'EXPIRED') return true;
@@ -177,6 +197,24 @@ export const AppointmentHistoryPage = () => {
         return (
           <span className="text-xs font-bold text-rose-600 tracking-wide uppercase">
             ĐÃ HỦY
+          </span>
+        );
+      case 'REJECTED':
+        return (
+          <span className="text-xs font-bold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 tracking-wide uppercase">
+            VẮNG MẶT / QUÁ GIỜ KHÁM
+          </span>
+        );
+      case 'OVER_DATE':
+        return (
+          <span className="text-xs font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200 tracking-wide uppercase">
+            QUÁ HẠN CA KHÁM
+          </span>
+        );
+      case 'CHECKED_IN':
+        return (
+          <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200 tracking-wide uppercase">
+            ĐÃ CHECK-IN
           </span>
         );
       case 'CONFIRMED':
@@ -312,13 +350,22 @@ export const AppointmentHistoryPage = () => {
                       )}
 
                       {apt.status === 'CONFIRMED' && (
-                        <button
-                          type="button"
-                          onClick={() => handleOpenCancelModal(apt)}
-                          className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold rounded-xl border border-rose-200 transition"
-                        >
-                          Hủy lịch
-                        </button>
+                        isPastStartTime(apt) ? (
+                          <span
+                            className="px-3 py-1.5 bg-slate-100 text-slate-400 text-xs font-semibold rounded-xl border border-slate-200 cursor-not-allowed"
+                            title="Lịch hẹn đã đến/qua giờ khám, không thể hủy"
+                          >
+                            Quá giờ hủy
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenCancelModal(apt)}
+                            className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold rounded-xl border border-rose-200 transition"
+                          >
+                            Hủy lịch
+                          </button>
+                        )
                       )}
                     </div>
                   </div>
