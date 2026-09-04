@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
     if (userData.clinicId) {
       localStorage.setItem('care_slot_clinic_id', userData.clinicId);
     } else {
-      localStorage.setItem('care_slot_clinic_id', '1');
+      localStorage.removeItem('care_slot_clinic_id');
     }
   };
 
