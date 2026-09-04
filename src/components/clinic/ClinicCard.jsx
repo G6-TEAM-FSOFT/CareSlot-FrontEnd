@@ -59,12 +59,6 @@ export const ClinicCard = ({ clinic }) => {
       {/* Left info column */}
       <div className="space-y-3 flex-grow">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full border border-emerald-100">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Đối Tác Xác Thực
-          </span>
-          <span className="inline-flex items-center gap-1 text-amber-500 text-xs font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
-            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> 4.9 (120+ đánh giá)
-          </span>
           {formattedDistance != null && (
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-sky-50 text-sky-700 text-xs font-semibold rounded-full border border-sky-100">
               <Navigation className="w-3 h-3 text-sky-600" /> Cách bạn {formattedDistance} km

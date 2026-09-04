@@ -34,10 +34,6 @@ export const Header = () => {
         <div className="flex items-center space-x-4">
           {user ? (
             <div className="flex items-center space-x-3">
-              <Link to="/history" className="flex items-center gap-1 text-sm font-medium text-slate-700 hover:text-indigo-600 transition">
-                <Calendar className="w-4 h-4" />
-                Lịch sử đặt
-              </Link>
               <button
                 onClick={() => {
                   logout();

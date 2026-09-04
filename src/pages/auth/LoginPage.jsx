@@ -61,15 +61,14 @@ export const LoginPage = () => {
 
       {/* Preset Accounts Quick Pickers */}
       <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-        <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">Tài khoản thử nghiệm từ DB:</p>
         <div className="grid grid-cols-2 gap-1.5 text-xs">
           <button
             type="button"
-            onClick={() => fillAccount('staff.caugiay@careslot.vn', '123456')}
+            onClick={() => fillAccount('staff1@careslot.vn', '123456')}
             className="px-2 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-cyan-500 hover:text-cyan-600 text-left transition flex items-center gap-1.5"
           >
             <Hospital className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
-            <span className="truncate">Staff (Cầu Giấy)</span>
+            <span className="truncate">BV ĐHYHN</span>
           </button>
           <button
             type="button"
