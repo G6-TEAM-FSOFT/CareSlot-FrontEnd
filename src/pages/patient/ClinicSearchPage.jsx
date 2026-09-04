@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, MapPin, Stethoscope, Filter, Building2, AlertCircle, RefreshCw, X, Navigation, Clock, ArrowUpDown } from 'lucide-react';
+import { Search, MapPin, Stethoscope, Filter, Building2, AlertCircle, RefreshCw, X, Navigation, Clock, ArrowUpDown, Loader2 } from 'lucide-react';
 import { clinicService, specialtyService } from '../../services/clinicService';
 import { ClinicCard } from '../../components/clinic/ClinicCard';
 import { ClinicFilterSidebar } from '../../components/clinic/ClinicFilterSidebar';

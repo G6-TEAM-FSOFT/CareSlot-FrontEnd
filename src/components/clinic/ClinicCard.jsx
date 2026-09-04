@@ -17,11 +17,22 @@ export const ClinicCard = ({ clinic }) => {
     return 'Liên hệ phòng khám';
   };
 
-  // Format Earliest Available Slot
-  const formatEarliestSlot = (slotIsoStr) => {
-    if (!slotIsoStr) return null;
+  // Format Earliest Available Slot safely (handles ISO strings and Jackson array [yyyy, MM, dd, HH, mm])
+  const formatEarliestSlot = (slotValue) => {
+    if (!slotValue) return null;
     try {
-      const slotDate = new Date(slotIsoStr);
+      let slotDate;
+      if (Array.isArray(slotValue)) {
+        const [year, month, day, hour = 0, minute = 0] = slotValue;
+        slotDate = new Date(year, month - 1, day, hour, minute);
+      } else {
+        slotDate = new Date(slotValue);
+      }
+
+      if (isNaN(slotDate.getTime())) {
+        return null;
+      }
+
       const now = new Date();
       const isToday =
         slotDate.getDate() === now.getDate() &&
@@ -35,12 +46,13 @@ export const ClinicCard = ({ clinic }) => {
       const dateStr = slotDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
       return `${timeStr}, ${dateStr}`;
     } catch {
-      return slotIsoStr;
+      return null;
     }
   };
 
   const earliestSlotText = formatEarliestSlot(clinic.earliestAvailableSlot);
   const specialties = clinic.specialtyNames || [];
+  const formattedDistance = clinic.distanceKm != null ? Number(clinic.distanceKm).toFixed(1) : null;
 
   return (
     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-100 transition duration-200 flex flex-col md:flex-row justify-between gap-6 group">
@@ -53,9 +65,9 @@ export const ClinicCard = ({ clinic }) => {
           <span className="inline-flex items-center gap-1 text-amber-500 text-xs font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> 4.9 (120+ đánh giá)
           </span>
-          {clinic.distanceKm != null && (
+          {formattedDistance != null && (
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-sky-50 text-sky-700 text-xs font-semibold rounded-full border border-sky-100">
-              <Navigation className="w-3 h-3 text-sky-600" /> Cách bạn {clinic.distanceKm} km
+              <Navigation className="w-3 h-3 text-sky-600" /> Cách bạn {formattedDistance} km
             </span>
           )}
         </div>
