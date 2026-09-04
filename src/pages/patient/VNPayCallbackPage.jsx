@@ -143,7 +143,7 @@ export const VNPayCallbackPage = () => {
             {/* Header Success Banner */}
             <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white p-8 text-center relative overflow-hidden">
               <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none" />
-              
+
               <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto text-emerald-600 shadow-lg mb-4 transform hover:scale-105 transition">
                 <CheckCircle2 className="w-12 h-12" />
               </div>
@@ -158,33 +158,6 @@ export const VNPayCallbackPage = () => {
 
             {/* Content Ticket */}
             <div className="p-6 sm:p-8 space-y-6">
-
-              {/* Booking Code & QR Section */}
-              <div className="bg-gradient-to-r from-sky-50 to-blue-50/60 rounded-2xl p-5 border border-sky-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="space-y-1 text-center sm:text-left">
-                  <span className="text-xs text-slate-400 font-medium">MÃ XÁC NHẬN ĐẶT KHÁM (BOOKING CODE)</span>
-                  <div className="text-2xl font-black font-mono text-sky-900 tracking-wider">
-                    {appointment?.bookingCode || paymentData.vnp_TxnRef || 'CS-SUCCESS'}
-                  </div>
-                  <p className="text-[11px] text-sky-700">
-                    Vui lòng cung cấp mã này tại quầy tiếp đón phòng khám khi tới lượt.
-                  </p>
-                </div>
-
-                {/* QR Code display */}
-                <div className="bg-white p-3 rounded-xl border border-sky-200 shadow-sm text-center shrink-0">
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${appointment?.bookingCode || paymentData.vnp_TxnRef || 'CareSlot'}`}
-                    alt="Booking QR Code"
-                    className="w-24 h-24 object-contain mx-auto"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                  <span className="text-[10px] text-slate-400 font-mono block mt-1">Check-in QR</span>
-                </div>
-              </div>
 
               {/* Grid 2 Columns Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
