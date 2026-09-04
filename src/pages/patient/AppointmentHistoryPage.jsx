@@ -111,7 +111,7 @@ export const AppointmentHistoryPage = () => {
     try {
       await appointmentService.cancelAppointment(cancellingAppointment.id, { reason: cancelReason });
       setCancelSuccess('Hủy lịch hẹn thành công!');
-      
+
       // Update local state
       setAppointments(appointments.map(a => a.id === cancellingAppointment.id ? { ...a, status: 'CANCELLED' } : a));
       setCancellingAppointment(null);
@@ -125,13 +125,52 @@ export const AppointmentHistoryPage = () => {
     }
   };
 
-  const getStatusBadge = (status) => {
+  const isAppointmentExpired = (apt) => {
+    if (!apt) return false;
+    if (apt.status === 'EXPIRED') return true;
+
+    if (apt.status === 'PENDING_PAYMENT') {
+      if (apt.createdAt) {
+        let createdTime = null;
+        if (Array.isArray(apt.createdAt)) {
+          const [y, m, d, h, min, s] = apt.createdAt;
+          createdTime = new Date(y, m - 1, d, h || 0, min || 0, s || 0).getTime();
+        } else {
+          createdTime = new Date(apt.createdAt).getTime();
+        }
+        if (createdTime && !isNaN(createdTime)) {
+          const elapsedSeconds = Math.floor((Date.now() - createdTime) / 1000);
+          return elapsedSeconds >= 600; // 10 minutes timeout
+        }
+      }
+    }
+    return false;
+  };
+
+  const getStatusBadge = (apt) => {
+    if (isAppointmentExpired(apt)) {
+      return (
+        <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 tracking-wide uppercase flex items-center gap-1">
+          <AlertCircle className="w-3 h-3 text-rose-500" />
+          <span>HẾT HẠN THANH TOÁN</span>
+        </span>
+      );
+    }
+
+    const status = typeof apt === 'string' ? apt : apt?.status;
     switch (status) {
       case 'PENDING_PAYMENT':
         return (
           <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 tracking-wide uppercase flex items-center gap-1">
             <Clock className="w-3 h-3 text-amber-500 animate-pulse" />
-            <span>CHỜ THANH TOÁN (10P)</span>
+            <span>CHỜ THANH TOÁN</span>
+          </span>
+        );
+      case 'EXPIRED':
+        return (
+          <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 tracking-wide uppercase flex items-center gap-1">
+            <AlertCircle className="w-3 h-3 text-rose-500" />
+            <span>HẾT HẠN THANH TOÁN</span>
           </span>
         );
       case 'CANCELLED':
@@ -185,7 +224,7 @@ export const AppointmentHistoryPage = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        
+
         {/* Breadcrumb matching Image 4 */}
         <div className="text-xs text-slate-400 mb-4 flex items-center gap-1 font-medium">
           <Link to="/" className="hover:text-sky-600 transition">Trang chủ</Link>
@@ -194,26 +233,24 @@ export const AppointmentHistoryPage = () => {
         </div>
 
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
-          
+
           {/* Tabs Navigation (Lịch khám / Lịch tái khám) */}
           <div className="border-b border-slate-100 grid grid-cols-2 text-center text-sm font-bold">
             <button
               onClick={() => setActiveTab('upcoming')}
-              className={`pb-3 transition relative ${
-                activeTab === 'upcoming'
-                  ? 'text-sky-700 border-b-2 border-sky-600'
-                  : 'text-slate-400 hover:text-slate-700'
-              }`}
+              className={`pb-3 transition relative ${activeTab === 'upcoming'
+                ? 'text-sky-700 border-b-2 border-sky-600'
+                : 'text-slate-400 hover:text-slate-700'
+                }`}
             >
               Lịch khám
             </button>
             <button
               onClick={() => setActiveTab('revisit')}
-              className={`pb-3 transition relative ${
-                activeTab === 'revisit'
-                  ? 'text-sky-700 border-b-2 border-sky-600'
-                  : 'text-slate-400 hover:text-slate-700'
-              }`}
+              className={`pb-3 transition relative ${activeTab === 'revisit'
+                ? 'text-sky-700 border-b-2 border-sky-600'
+                : 'text-slate-400 hover:text-slate-700'
+                }`}
             >
               Lịch tái khám
             </button>
@@ -279,9 +316,9 @@ export const AppointmentHistoryPage = () => {
 
                     {/* Right Side: Status & Actions */}
                     <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4 border-t sm:border-t-0 border-slate-100 pt-3 sm:pt-0">
-                      {getStatusBadge(apt.status)}
+                      {getStatusBadge(apt)}
 
-                      {apt.status === 'PENDING_PAYMENT' && (
+                      {apt.status === 'PENDING_PAYMENT' && !isAppointmentExpired(apt) && (
                         <button
                           type="button"
                           onClick={() => {

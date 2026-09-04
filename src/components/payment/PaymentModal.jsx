@@ -1,44 +1,74 @@
 import React, { useState, useEffect } from 'react';
 import {
   X,
-  ShieldCheck,
   Clock,
-  CreditCard,
-  QrCode,
   Building2,
   Calendar,
   User,
   AlertCircle,
-  ExternalLink,
   ChevronRight,
   Sparkles,
   Lock
 } from 'lucide-react';
 import { paymentService } from '../../services/paymentService';
 
+// Helper function to calculate remaining hold time (10 mins = 600s) from appointment creation
+const getRemainingHoldSeconds = (apt) => {
+  if (!apt) return 600;
+
+  // 1. Check if backend returned createdAt timestamp
+  if (apt.createdAt) {
+    let createdTime = null;
+    if (Array.isArray(apt.createdAt)) {
+      const [y, m, d, h, min, s] = apt.createdAt;
+      createdTime = new Date(y, m - 1, d, h || 0, min || 0, s || 0).getTime();
+    } else {
+      createdTime = new Date(apt.createdAt).getTime();
+    }
+
+    if (createdTime && !isNaN(createdTime)) {
+      const elapsedSeconds = Math.floor((Date.now() - createdTime) / 1000);
+      const remaining = 600 - elapsedSeconds;
+      return remaining > 0 ? remaining : 0;
+    }
+  }
+
+  // 2. Fallback: attach a timestamp to appointment instance when first opened
+  if (!apt._clientHoldStartTime) {
+    apt._clientHoldStartTime = Date.now();
+  }
+  const elapsedSeconds = Math.floor((Date.now() - apt._clientHoldStartTime) / 1000);
+  const remaining = 600 - elapsedSeconds;
+  return remaining > 0 ? remaining : 0;
+};
+
 export const PaymentModal = ({ isOpen, onClose, appointment, onSuccessRedirect }) => {
-  const [selectedMethod, setSelectedMethod] = useState('vnpay_qr'); // 'vnpay_qr' | 'atm' | 'intl'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [timeLeft, setTimeLeft] = useState(600); // 10 mins countdown
+  const [timeLeft, setTimeLeft] = useState(600);
 
-  // Countdown timer effect
+  // Countdown timer effect based on appointment creation time
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !appointment) return;
 
-    setTimeLeft(600);
+    const updateTimer = () => {
+      const remaining = getRemainingHoldSeconds(appointment);
+      setTimeLeft(remaining);
+      return remaining;
+    };
+
+    const initialRemaining = updateTimer();
+    if (initialRemaining <= 0) return;
+
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
+      const remaining = updateTimer();
+      if (remaining <= 0) {
+        clearInterval(timer);
+      }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isOpen]);
+  }, [isOpen, appointment]);
 
   if (!isOpen || !appointment) return null;
 
@@ -119,9 +149,8 @@ export const PaymentModal = ({ isOpen, onClose, appointment, onSuccessRedirect }
               <Clock className="w-4 h-4 text-amber-400 animate-pulse" />
               <span>Thời gian giữ ca khám:</span>
             </div>
-            <span className={`font-mono font-bold text-sm px-2.5 py-0.5 rounded-lg ${
-              timeLeft < 180 ? 'bg-rose-500/30 text-rose-200 border border-rose-400/30' : 'bg-white/10 text-amber-300'
-            }`}>
+            <span className={`font-mono font-bold text-sm px-2.5 py-0.5 rounded-lg ${timeLeft < 180 ? 'bg-rose-500/30 text-rose-200 border border-rose-400/30' : 'bg-white/10 text-amber-300'
+              }`}>
               {formatTime(timeLeft)}
             </span>
           </div>
@@ -188,93 +217,6 @@ export const PaymentModal = ({ isOpen, onClose, appointment, onSuccessRedirect }
             </div>
           </div>
 
-          {/* Payment Method Selector */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-700 block">
-              Chọn phương thức thanh toán VNPay:
-            </label>
-
-            <div className="grid grid-cols-1 gap-2.5">
-              {/* Option 1: VNPay QR */}
-              <button
-                type="button"
-                onClick={() => setSelectedMethod('vnpay_qr')}
-                className={`p-3.5 rounded-2xl border flex items-center justify-between text-left transition ${
-                  selectedMethod === 'vnpay_qr'
-                    ? 'border-sky-500 bg-sky-50/80 ring-2 ring-sky-400/40 shadow-sm'
-                    : 'border-slate-200 bg-white hover:bg-slate-50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-sky-100 flex items-center justify-center text-sky-700 shrink-0">
-                    <QrCode className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-800">Ứng dụng Ngân hàng / VNPAY QR</h4>
-                    <p className="text-[11px] text-slate-500">Quét mã QR bằng ứng dụng ngân hàng (Vietcombank, BIDV, Agribank...)</p>
-                  </div>
-                </div>
-                <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                  selectedMethod === 'vnpay_qr' ? 'border-sky-600 bg-sky-600' : 'border-slate-300'
-                }`}>
-                  {selectedMethod === 'vnpay_qr' && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
-                </div>
-              </button>
-
-              {/* Option 2: Domestic ATM */}
-              <button
-                type="button"
-                onClick={() => setSelectedMethod('atm')}
-                className={`p-3.5 rounded-2xl border flex items-center justify-between text-left transition ${
-                  selectedMethod === 'atm'
-                    ? 'border-sky-500 bg-sky-50/80 ring-2 ring-sky-400/40 shadow-sm'
-                    : 'border-slate-200 bg-white hover:bg-slate-50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 shrink-0">
-                    <CreditCard className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-800">Thẻ ATM / Tài khoản nội địa</h4>
-                    <p className="text-[11px] text-slate-500">Thanh toán qua 40+ ngân hàng nội địa Việt Nam</p>
-                  </div>
-                </div>
-                <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                  selectedMethod === 'atm' ? 'border-sky-600 bg-sky-600' : 'border-slate-300'
-                }`}>
-                  {selectedMethod === 'atm' && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
-                </div>
-              </button>
-
-              {/* Option 3: International Cards */}
-              <button
-                type="button"
-                onClick={() => setSelectedMethod('intl')}
-                className={`p-3.5 rounded-2xl border flex items-center justify-between text-left transition ${
-                  selectedMethod === 'intl'
-                    ? 'border-sky-500 bg-sky-50/80 ring-2 ring-sky-400/40 shadow-sm'
-                    : 'border-slate-200 bg-white hover:bg-slate-50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0">
-                    <CreditCard className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-800">Thẻ quốc tế (Visa, Mastercard, JCB)</h4>
-                    <p className="text-[11px] text-slate-500">Chấp nhận thanh toán bằng thẻ tín dụng / ghi nợ quốc tế</p>
-                  </div>
-                </div>
-                <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                  selectedMethod === 'intl' ? 'border-sky-600 bg-sky-600' : 'border-slate-300'
-                }`}>
-                  {selectedMethod === 'intl' && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
-                </div>
-              </button>
-            </div>
-          </div>
-
           {/* Error Message */}
           {error && (
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs flex items-center gap-2">
@@ -282,12 +224,6 @@ export const PaymentModal = ({ isOpen, onClose, appointment, onSuccessRedirect }
               <span>{error}</span>
             </div>
           )}
-
-          {/* Security Banner */}
-          <div className="flex items-center gap-2 text-[11px] text-slate-500 pt-1">
-            <Lock className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span>Giao dịch được bảo mật bởi chuẩn hóa mã hóa 256-bit SSL của VNPay.</span>
-          </div>
         </div>
 
         {/* Footer Actions */}
