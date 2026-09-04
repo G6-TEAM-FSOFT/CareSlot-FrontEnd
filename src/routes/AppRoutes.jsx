@@ -8,6 +8,7 @@ import { AdminLayout } from '../layouts/AdminLayout';
 import { AuthLayout } from '../layouts/AuthLayout';
 
 import { HomePage } from '../pages/patient/HomePage';
+import { ClinicSearchPage } from '../pages/patient/ClinicSearchPage';
 import { DoctorBookingPage } from '../pages/patient/DoctorBookingPage';
 import { PatientProfilesPage } from '../pages/patient/PatientProfilesPage';
 import { AiSuggestPage } from '../pages/patient/AiSuggestPage';
@@ -36,7 +37,7 @@ export const AppRoutes = () => {
       {/* Patient Portal Routes */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
-        <Route path="/clinics" element={<DoctorBookingPage />} />
+        <Route path="/clinics" element={<ClinicSearchPage />} />
         <Route path="/booking" element={<DoctorBookingPage />} />
         <Route path="/patients" element={<PatientProfilesPage />} />
         <Route path="/ai-suggest" element={<AiSuggestPage />} />

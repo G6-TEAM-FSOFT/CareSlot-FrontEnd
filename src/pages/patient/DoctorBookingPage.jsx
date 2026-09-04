@@ -18,16 +18,17 @@ import {
 import { clinicService, doctorService, slotService, appointmentService, specialtyService } from '../../services/clinicService';
 import { patientService } from '../../services/patientService';
 import { PaymentModal } from '../../components/payment/PaymentModal';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export const DoctorBookingPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Filters state
   const [bookingMode, setBookingMode] = useState('doctor'); // 'doctor' | 'specialty'
   const [selectedPatientId, setSelectedPatientId] = useState('');
-  const [selectedClinicId, setSelectedClinicId] = useState('');
-  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState('');
+  const [selectedClinicId, setSelectedClinicId] = useState(searchParams.get('clinicId') ? Number(searchParams.get('clinicId')) : '');
+  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState(searchParams.get('specialtyId') ? Number(searchParams.get('specialtyId')) : '');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [useInsurance, setUseInsurance] = useState('no');
