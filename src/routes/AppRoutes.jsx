@@ -8,11 +8,11 @@ import { AdminLayout } from '../layouts/AdminLayout';
 import { AuthLayout } from '../layouts/AuthLayout';
 
 import { HomePage } from '../pages/patient/HomePage';
+import { ClinicSearchPage } from '../pages/patient/ClinicSearchPage';
 import { DoctorBookingPage } from '../pages/patient/DoctorBookingPage';
 import { PatientProfilesPage } from '../pages/patient/PatientProfilesPage';
 import { AiSuggestPage } from '../pages/patient/AiSuggestPage';
 import { AppointmentHistoryPage } from '../pages/patient/AppointmentHistoryPage';
-import { PatientProfilePage } from '../pages/patient/PatientProfilePage';
 import { VNPayCallbackPage } from '../pages/patient/VNPayCallbackPage';
 
 import { LoginPage } from '../pages/auth/LoginPage';
@@ -37,14 +37,10 @@ export const AppRoutes = () => {
       {/* Patient Portal Routes */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
-        <Route path="/clinics" element={<DoctorBookingPage />} />
+        <Route path="/clinics" element={<ClinicSearchPage />} />
         <Route path="/booking" element={<DoctorBookingPage />} />
         <Route path="/patients" element={<PatientProfilesPage />} />
         <Route path="/ai-suggest" element={<AiSuggestPage />} />
-
-        <Route element={<ProtectedRoute allowedRoles={[ROLES.PATIENT]} />}>
-          <Route path="/patient/profile" element={<PatientProfilePage />} />
-        </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.PATIENT, ROLES.CLINIC, ROLES.CLINIC_STAFF, ROLES.ADMIN]} />}>
           <Route path="/history" element={<AppointmentHistoryPage />} />

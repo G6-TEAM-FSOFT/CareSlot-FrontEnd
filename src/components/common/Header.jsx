@@ -20,7 +20,8 @@ export const Header = () => {
 
         <nav className="hidden md:flex items-center space-x-6 text-sm font-medium text-slate-600">
           <Link to="/" className="hover:text-indigo-600 transition">Trang chủ</Link>
-          <Link to="/clinics" className="hover:text-indigo-600 transition">Đặt Khám Bác Sĩ</Link>
+          <Link to="/clinics" className="hover:text-indigo-600 transition">Tìm Phòng Khám</Link>
+          <Link to="/booking" className="hover:text-indigo-600 transition">Đặt Khám Bác Sĩ</Link>
           <Link to="/patients" className="hover:text-indigo-600 transition">Hồ Sơ Bệnh Nhân</Link>
           <Link to="/history" className="hover:text-indigo-600 transition">Lịch Khám Đã Đặt</Link>
           <Link to="/ai-suggest" className="flex items-center gap-1.5 text-indigo-600 hover:text-indigo-700 font-semibold bg-indigo-50 px-3 py-1.5 rounded-full transition">
@@ -33,15 +34,6 @@ export const Header = () => {
         <div className="flex items-center space-x-4">
           {user ? (
             <div className="flex items-center space-x-3">
-              {user.role === ROLES.PATIENT && (
-                <Link
-                  to="/patient/profile"
-                  className="flex items-center gap-1 text-sm font-medium text-slate-700 hover:text-indigo-600 transition"
-                >
-                  <User className="w-4 h-4" />
-                  Hồ sơ cá nhân
-                </Link>
-              )}
               <Link to="/history" className="flex items-center gap-1 text-sm font-medium text-slate-700 hover:text-indigo-600 transition">
                 <Calendar className="w-4 h-4" />
                 Lịch sử đặt

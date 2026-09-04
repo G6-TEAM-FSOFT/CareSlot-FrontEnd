@@ -18,6 +18,89 @@ import {
 } from 'lucide-react';
 import { patientService } from '../../services/patientService';
 
+// Custom Date Input displaying and formatting explicitly as DD/MM/YYYY (Ngày - Tháng - Năm)
+const DateInputVi = ({ label, value, onChange, max, required = false, helperText = '' }) => {
+  const [textValue, setTextValue] = useState('');
+  const dateInputRef = React.useRef(null);
+
+  useEffect(() => {
+    if (value) {
+      const parts = value.split('T')[0].split('-');
+      if (parts.length === 3) {
+        setTextValue(`${parts[2]}/${parts[1]}/${parts[0]}`);
+      }
+    } else {
+      setTextValue('');
+    }
+  }, [value]);
+
+  const handleTextChange = (e) => {
+    const raw = e.target.value.replace(/\D/g, '').slice(0, 8);
+    let formatted = '';
+    if (raw.length <= 2) {
+      formatted = raw;
+    } else if (raw.length <= 4) {
+      formatted = `${raw.slice(0, 2)}/${raw.slice(2)}`;
+    } else {
+      formatted = `${raw.slice(0, 2)}/${raw.slice(2, 4)}/${raw.slice(4)}`;
+    }
+    setTextValue(formatted);
+
+    if (raw.length === 8) {
+      const day = raw.slice(0, 2);
+      const month = raw.slice(2, 4);
+      const year = raw.slice(4, 8);
+      const iso = `${year}-${month}-${day}`;
+      onChange(iso);
+    } else if (raw.length === 0) {
+      onChange('');
+    }
+  };
+
+  const handleNativePickerChange = (e) => {
+    const isoVal = e.target.value;
+    onChange(isoVal);
+  };
+
+  return (
+    <div className="space-y-1">
+      <label className="font-semibold text-slate-700 block">
+        {label} {required && <span className="text-rose-500">*</span>}
+      </label>
+      <div className="relative">
+        <input
+          type="text"
+          value={textValue}
+          onChange={handleTextChange}
+          placeholder="DD/MM/YYYY (VD: 25/12/2004)"
+          maxLength={10}
+          className="w-full p-2.5 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-sky-500 focus:bg-white transition"
+        />
+        <button
+          type="button"
+          onClick={() => (dateInputRef.current?.showPicker ? dateInputRef.current.showPicker() : dateInputRef.current?.focus())}
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-600 p-1 rounded-md transition cursor-pointer"
+          title="Mở lịch để chọn ngày"
+        >
+          <Calendar className="w-4 h-4 text-sky-600" />
+        </button>
+        <input
+          ref={dateInputRef}
+          type="date"
+          max={max}
+          value={value || ''}
+          onChange={handleNativePickerChange}
+          className="sr-only"
+          tabIndex={-1}
+        />
+      </div>
+      <span className="text-[10px] text-slate-400 block">
+        {helperText || 'Nhập dạng: Ngày/Tháng/Năm (VD: 25/12/2004) hoặc bấm icon lịch'}
+      </span>
+    </div>
+  );
+};
+
 export const PatientProfilesPage = () => {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,43 +138,11 @@ export const PatientProfilesPage = () => {
       const resData = res?.data || res || [];
       const list = Array.isArray(resData) ? resData : resData.content || [];
       
-      // Fallback mock data matching UI image if DB is empty
-      if (list.length === 0) {
-        const mockList = [
-          {
-            id: 1,
-            fullName: 'LÊ THÀNH LINH',
-            relationship: 'SELF',
-            phone: '0964865480',
-            dateOfBirth: '2004-06-11',
-            gender: 'MALE',
-            identityCard: '075204000024',
-            cardIssueDate: '2018-07-12',
-            ethnicity: 'Kinh',
-            nationality: 'Việt Nam',
-            occupation: 'Lái xe buýt',
-            address: '78 Bình Lộc, Xã Quảng Sơn, Lâm Đồng'
-          },
-          {
-            id: 2,
-            fullName: 'NGUYỄN ĐĂNG KHOA',
-            relationship: 'CHILD',
-            phone: '0912345678',
-            dateOfBirth: '2015-08-20',
-            gender: 'MALE',
-            identityCard: '',
-            cardIssueDate: '',
-            ethnicity: 'Kinh',
-            nationality: 'Việt Nam',
-            occupation: 'Học sinh',
-            address: '78 Bình Lộc, Xã Quảng Sơn, Lâm Đồng'
-          }
-        ];
-        setPatients(mockList);
-        setSelectedPatient(mockList[0]);
-      } else {
-        setPatients(list);
+      setPatients(list);
+      if (list.length > 0) {
         setSelectedPatient(list[0]);
+      } else {
+        setSelectedPatient(null);
       }
     } catch (err) {
       console.error('Error fetching patients:', err);
@@ -101,13 +152,14 @@ export const PatientProfilesPage = () => {
   };
 
   const handleOpenCreateModal = () => {
+    const hasSelf = patients.some(p => p.relationship === 'SELF');
     setEditingPatient(null);
     setFormData({
       fullName: '',
       dateOfBirth: '',
       gender: 'MALE',
       phone: '',
-      relationship: 'SELF',
+      relationship: hasSelf ? 'CHILD' : 'SELF',
       identityCard: '',
       cardIssueDate: '',
       ethnicity: 'Kinh',
@@ -140,13 +192,57 @@ export const PatientProfilesPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.fullName.trim()) {
+    setErrorMsg('');
+
+    // 1. Validate Họ và tên (Không cho nhập số)
+    const trimmedName = formData.fullName.trim();
+    if (!trimmedName) {
       setErrorMsg('Vui lòng nhập Họ và tên');
+      return;
+    }
+    if (/\d/.test(trimmedName)) {
+      setErrorMsg('Họ và tên không được chứa chữ số');
+      return;
+    }
+
+    // 2. Validate Số điện thoại (Chỉ số, 10-11 chữ số, bắt đầu bằng 0)
+    const trimmedPhone = formData.phone.trim();
+    if (!trimmedPhone) {
+      setErrorMsg('Vui lòng nhập Số điện thoại');
+      return;
+    }
+    if (!/^0\d{9,10}$/.test(trimmedPhone)) {
+      setErrorMsg('Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và gồm 10-11 chữ số)');
+      return;
+    }
+
+    // 3. Validate CCCD (Nếu có nhập, phải là 9-12 chữ số, không chứa chữ)
+    const trimmedIdentity = (formData.identityCard || '').trim();
+    if (trimmedIdentity && !/^\d{9,12}$/.test(trimmedIdentity)) {
+      setErrorMsg('Căn cước công dân (CCCD) phải gồm từ 9 đến 12 chữ số');
+      return;
+    }
+
+    // 4. Validate Nghề nghiệp (Không cho chứa số)
+    const trimmedOccupation = (formData.occupation || '').trim();
+    if (trimmedOccupation && /\d/.test(trimmedOccupation)) {
+      setErrorMsg('Nghề nghiệp không được chứa chữ số');
+      return;
+    }
+
+    // 5. Validate Ngày sinh (Không lớn hơn ngày hiện tại)
+    const today = new Date().toISOString().split('T')[0];
+    if (formData.dateOfBirth && formData.dateOfBirth > today) {
+      setErrorMsg('Ngày sinh không được lớn hơn ngày hiện tại');
+      return;
+    }
+
+    if (formData.cardIssueDate && formData.cardIssueDate > today) {
+      setErrorMsg('Ngày cấp CCCD không được lớn hơn ngày hiện tại');
       return;
     }
 
     setSubmitting(true);
-    setErrorMsg('');
 
     try {
       if (editingPatient) {
@@ -195,33 +291,24 @@ export const PatientProfilesPage = () => {
       case 'SPOUSE': return 'Vợ / Chồng';
       case 'CHILD': return 'Con';
       case 'PARENT': return 'Bố / Mẹ';
+      case 'OTHER': return 'Người thân khác';
       default: return rel || 'Người thân';
     }
   };
 
-  return (
-    <div className="bg-slate-50 min-h-screen pb-12 font-sans">
-      {/* Top Banner Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4 mb-6 shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-sm">
-              +
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-sky-900 uppercase tracking-tight">
-                Bệnh Viện ĐH Y Hà Nội
-              </h1>
-              <p className="text-xs text-slate-500">HANOI MEDICAL UNIVERSITY HOSPITAL</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <span className="text-xs text-slate-500 block font-medium">Hotline tư vấn</span>
-            <span className="text-lg font-extrabold text-red-600 tracking-wide">1900 6422</span>
-          </div>
-        </div>
-      </div>
+  const formatDateDisplayCustom = (dateStr) => {
+    if (!dateStr) return 'Chưa cập nhật';
+    const parts = dateStr.split('T')[0].split('-');
+    if (parts.length === 3) {
+      return `${parts[2]} - ${parts[1]} - ${parts[0]}`;
+    }
+    return dateStr;
+  };
 
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  return (
+    <div className="bg-slate-50 min-h-screen pt-6 pb-12 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
@@ -229,7 +316,7 @@ export const PatientProfilesPage = () => {
           <div className="lg:col-span-4 space-y-4">
             <button
               onClick={handleOpenCreateModal}
-              className="w-full py-3 bg-white border border-sky-300 text-sky-700 hover:bg-sky-50 font-bold rounded-2xl text-sm transition shadow-sm flex items-center justify-center gap-2"
+              className="w-full py-3 bg-white border border-sky-300 text-sky-700 hover:bg-sky-50 font-bold rounded-2xl text-sm transition shadow-sm flex items-center justify-center gap-2 cursor-pointer"
             >
               <Plus className="w-4 h-4 text-sky-600" />
               <span>Thêm mới</span>
@@ -281,7 +368,7 @@ export const PatientProfilesPage = () => {
               <div className="border-b border-slate-200 flex space-x-8 text-sm font-bold">
                 <button
                   onClick={() => setActiveTab('personal')}
-                  className={`pb-3 transition relative ${
+                  className={`pb-3 transition relative cursor-pointer ${
                     activeTab === 'personal'
                       ? 'text-sky-700 border-b-2 border-sky-600'
                       : 'text-slate-500 hover:text-slate-800'
@@ -291,7 +378,7 @@ export const PatientProfilesPage = () => {
                 </button>
                 <button
                   onClick={() => setActiveTab('insurance')}
-                  className={`pb-3 transition relative ${
+                  className={`pb-3 transition relative cursor-pointer ${
                     activeTab === 'insurance'
                       ? 'text-sky-700 border-b-2 border-sky-600'
                       : 'text-slate-500 hover:text-slate-800'
@@ -321,7 +408,7 @@ export const PatientProfilesPage = () => {
                           </h2>
                           <button
                             onClick={() => handleOpenEditModal(selectedPatient)}
-                            className="p-1 text-slate-400 hover:text-sky-600 transition rounded-lg hover:bg-sky-50"
+                            className="p-1 text-slate-400 hover:text-sky-600 transition rounded-lg hover:bg-sky-50 cursor-pointer"
                             title="Chỉnh sửa hồ sơ"
                           >
                             <Edit2 className="w-4 h-4" />
@@ -333,31 +420,31 @@ export const PatientProfilesPage = () => {
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => handleDeletePatient(selectedPatient.id)}
-                      className="px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 rounded-xl transition flex items-center gap-1 font-semibold"
-                    >
-                      <Trash2 className="w-4 h-4" /> Xóa hồ sơ
-                    </button>
+                    {selectedPatient.relationship !== 'SELF' && (
+                      <button
+                        onClick={() => handleDeletePatient(selectedPatient.id)}
+                        className="px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 rounded-xl transition flex items-center gap-1 font-semibold cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" /> Xóa hồ sơ
+                      </button>
+                    )}
                   </div>
 
                   {/* Information Grid Table */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-y-6 gap-x-8 text-xs text-slate-700">
                     {/* Row 1 */}
                     <div className="space-y-1 border-b border-slate-100 pb-3">
-                      <span className="text-[11px] text-slate-400 block">Số điện thoại</span>
+                      <span className="text-[11px] text-slate-400 block font-medium">Số điện thoại</span>
                       <p className="font-bold text-slate-800 text-sm">{selectedPatient.phone || 'Chưa cập nhật'}</p>
                     </div>
                     <div className="space-y-1 border-b border-slate-100 pb-3">
-                      <span className="text-[11px] text-slate-400 block">Ngày sinh</span>
+                      <span className="text-[11px] text-slate-400 block font-medium">Ngày sinh (Ngày - Tháng - Năm)</span>
                       <p className="font-bold text-slate-800 text-sm">
-                        {selectedPatient.dateOfBirth
-                          ? new Date(selectedPatient.dateOfBirth).toLocaleDateString('vi-VN')
-                          : '11/06/2004'}
+                        {formatDateDisplayCustom(selectedPatient.dateOfBirth)}
                       </p>
                     </div>
                     <div className="space-y-1 border-b border-slate-100 pb-3">
-                      <span className="text-[11px] text-slate-400 block">Giới tính</span>
+                      <span className="text-[11px] text-slate-400 block font-medium">Giới tính</span>
                       <p className="font-bold text-slate-800 text-sm">
                         {selectedPatient.gender === 'FEMALE' ? 'Nữ' : 'Nam'}
                       </p>
@@ -365,30 +452,32 @@ export const PatientProfilesPage = () => {
 
                     {/* Row 2 */}
                     <div className="space-y-1 border-b border-slate-100 pb-3">
-                      <span className="text-[11px] text-slate-400 block">Căn cước công dân</span>
-                      <p className="font-bold text-slate-800 text-sm">{selectedPatient.identityCard || '075204000024'}</p>
+                      <span className="text-[11px] text-slate-400 block font-medium">Căn cước công dân</span>
+                      <p className="font-bold text-slate-800 text-sm">{selectedPatient.identityCard || 'Chưa cập nhật'}</p>
                     </div>
                     <div className="space-y-1 border-b border-slate-100 pb-3">
-                      <span className="text-[11px] text-slate-400 block">Ngày cấp</span>
-                      <p className="font-bold text-slate-800 text-sm">{selectedPatient.cardIssueDate || '12/07/2018'}</p>
+                      <span className="text-[11px] text-slate-400 block font-medium">Ngày cấp (Ngày - Tháng - Năm)</span>
+                      <p className="font-bold text-slate-800 text-sm">
+                        {formatDateDisplayCustom(selectedPatient.cardIssueDate)}
+                      </p>
                     </div>
                     <div className="space-y-1 border-b border-slate-100 pb-3">
-                      <span className="text-[11px] text-slate-400 block">Dân tộc</span>
+                      <span className="text-[11px] text-slate-400 block font-medium">Dân tộc</span>
                       <p className="font-bold text-slate-800 text-sm">{selectedPatient.ethnicity || 'Kinh'}</p>
                     </div>
 
                     {/* Row 3 */}
                     <div className="space-y-1">
-                      <span className="text-[11px] text-slate-400 block">Quốc tịch</span>
+                      <span className="text-[11px] text-slate-400 block font-medium">Quốc tịch</span>
                       <p className="font-bold text-slate-800 text-sm">{selectedPatient.nationality || 'Việt Nam'}</p>
                     </div>
                     <div className="space-y-1">
-                      <span className="text-[11px] text-slate-400 block">Nghề nghiệp</span>
-                      <p className="font-bold text-slate-800 text-sm">{selectedPatient.occupation || 'Lái xe buýt'}</p>
+                      <span className="text-[11px] text-slate-400 block font-medium">Nghề nghiệp</span>
+                      <p className="font-bold text-slate-800 text-sm">{selectedPatient.occupation || 'Chưa cập nhật'}</p>
                     </div>
                     <div className="space-y-1">
-                      <span className="text-[11px] text-slate-400 block">Địa chỉ</span>
-                      <p className="font-bold text-slate-800 text-sm">{selectedPatient.address || '78 Bình Lộc, Xã Quảng Sơn, Lâm Đồng'}</p>
+                      <span className="text-[11px] text-slate-400 block font-medium">Địa chỉ</span>
+                      <p className="font-bold text-slate-800 text-sm">{selectedPatient.address || 'Chưa cập nhật'}</p>
                     </div>
                   </div>
                 </div>
@@ -441,7 +530,7 @@ export const PatientProfilesPage = () => {
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-lg font-bold"
+                className="text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer"
               >
                 &times;
               </button>
@@ -456,44 +545,68 @@ export const PatientProfilesPage = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Họ và tên (Không cho nhập số) */}
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Họ và tên (*)</label>
+                  <label className="font-semibold text-slate-700">
+                    Họ và tên <span className="text-rose-500">*</span>
+                  </label>
                   <input
                     type="text"
                     required
                     value={formData.fullName}
-                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[0-9]/g, '');
+                      setFormData({ ...formData, fullName: val });
+                    }}
                     placeholder="VD: NGUYỄN VĂN AN"
                     className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-sky-500"
                   />
+                  <span className="text-[10px] text-slate-400 block">Chỉ nhập chữ cái, không chứa số</span>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Mối quan hệ</label>
-                  <select
-                    value={formData.relationship}
-                    onChange={(e) => setFormData({ ...formData, relationship: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-sky-500"
-                  >
-                    <option value="SELF">Chủ tài khoản (Bản thân)</option>
-                    <option value="SPOUSE">Vợ / Chồng</option>
-                    <option value="CHILD">Con</option>
-                    <option value="PARENT">Bố / Mẹ</option>
-                  </select>
+                  <label className="font-semibold text-slate-700">
+                    Hồ sơ này của <span className="text-rose-500">*</span>
+                  </label>
+                  {editingPatient && editingPatient.relationship === 'SELF' ? (
+                    <select
+                      disabled
+                      value="SELF"
+                      className="w-full p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-600 cursor-not-allowed"
+                    >
+                      <option value="SELF">Chủ tài khoản (Bản thân)</option>
+                    </select>
+                  ) : (
+                    <select
+                      value={formData.relationship}
+                      onChange={(e) => setFormData({ ...formData, relationship: e.target.value })}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-sky-500"
+                    >
+                      {!patients.some(p => p.relationship === 'SELF' && p.id !== editingPatient?.id) && (
+                        <option value="SELF">Chủ tài khoản (Bản thân)</option>
+                      )}
+                      <option value="SPOUSE">Vợ / Chồng</option>
+                      <option value="CHILD">Con</option>
+                      <option value="PARENT">Bố / Mẹ</option>
+                      <option value="OTHER">Người thân khác</option>
+                    </select>
+                  )}
                 </div>
 
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Ngày sinh</label>
-                  <input
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-sky-500"
-                  />
-                </div>
+                {/* Ngày sinh (Ngày - Tháng - Năm) */}
+                <DateInputVi
+                  label="Ngày sinh"
+                  required={true}
+                  max={todayStr}
+                  value={formData.dateOfBirth}
+                  onChange={(val) => setFormData({ ...formData, dateOfBirth: val })}
+                  helperText="Nhập dạng: Ngày/Tháng/Năm (VD: 25/12/2004) hoặc bấm icon lịch"
+                />
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Giới tính</label>
+                  <label className="font-semibold text-slate-700">
+                    Giới tính <span className="text-rose-500">*</span>
+                  </label>
                   <select
                     value={formData.gender}
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
@@ -504,47 +617,64 @@ export const PatientProfilesPage = () => {
                   </select>
                 </div>
 
+                {/* Số điện thoại (Chỉ cho nhập số) */}
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Số điện thoại</label>
+                  <label className="font-semibold text-slate-700">
+                    Số điện thoại <span className="text-rose-500">*</span>
+                  </label>
                   <input
                     type="tel"
+                    required
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="0912345678"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                      setFormData({ ...formData, phone: val });
+                    }}
+                    placeholder="VD: 0912345678"
                     className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-sky-500"
                   />
+                  <span className="text-[10px] text-slate-400 block">Chỉ nhập chữ số (10 - 11 số)</span>
                 </div>
 
+                {/* CCCD (Chỉ cho nhập số) */}
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-700">Căn cước công dân (CCCD)</label>
                   <input
                     type="text"
                     value={formData.identityCard}
-                    onChange={(e) => setFormData({ ...formData, identityCard: e.target.value })}
-                    placeholder="075204000024"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 12);
+                      setFormData({ ...formData, identityCard: val });
+                    }}
+                    placeholder="VD: 075204000024 (Tùy chọn)"
                     className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-sky-500"
                   />
+                  <span className="text-[10px] text-slate-400 block">Chỉ nhập chữ số (tối đa 12 số)</span>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700">Ngày cấp CCCD</label>
-                  <input
-                    type="date"
-                    value={formData.cardIssueDate}
-                    onChange={(e) => setFormData({ ...formData, cardIssueDate: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-sky-500"
-                  />
-                </div>
+                {/* Ngày cấp CCCD (Ngày - Tháng - Năm) */}
+                <DateInputVi
+                  label="Ngày cấp CCCD"
+                  max={todayStr}
+                  value={formData.cardIssueDate}
+                  onChange={(val) => setFormData({ ...formData, cardIssueDate: val })}
+                  helperText="Nhập dạng: Ngày/Tháng/Năm (VD: 22/10/2022) hoặc bấm icon lịch"
+                />
 
+                {/* Nghề nghiệp (Không cho nhập số) */}
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-700">Nghề nghiệp</label>
                   <input
                     type="text"
                     value={formData.occupation}
-                    onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[0-9]/g, '');
+                      setFormData({ ...formData, occupation: val });
+                    }}
                     placeholder="VD: Nhân viên văn phòng"
                     className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-sky-500"
                   />
+                  <span className="text-[10px] text-slate-400 block">Chỉ nhập chữ cái, không chứa số</span>
                 </div>
               </div>
 
@@ -563,14 +693,14 @@ export const PatientProfilesPage = () => {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2.5 text-xs font-bold text-white bg-sky-600 hover:bg-sky-700 rounded-xl shadow-sm transition"
+                  className="px-5 py-2.5 text-xs font-bold text-white bg-sky-600 hover:bg-sky-700 rounded-xl shadow-sm transition cursor-pointer disabled:opacity-60"
                 >
                   {submitting ? 'Đang lưu...' : 'Lưu hồ sơ'}
                 </button>
