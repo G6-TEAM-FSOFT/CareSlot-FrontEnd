@@ -5,6 +5,7 @@ import { MainLayout } from '../layouts/MainLayout';
 import { ClinicPartnerLayout } from '../layouts/clinic_partner/ClinicPartnerLayout';
 import { AdminLayout } from '../layouts/AdminLayout';
 import { AuthLayout } from '../layouts/AuthLayout';
+import { OutpatientLayout } from '../layouts/OutpatientLayout';
 
 import { HomePage } from '../pages/patient/HomePage';
 import { ClinicSearchPage } from '../pages/patient/ClinicSearchPage';
@@ -13,6 +14,10 @@ import { PatientProfilesPage } from '../pages/patient/PatientProfilesPage';
 import { AiSuggestPage } from '../pages/patient/AiSuggestPage';
 import { AppointmentHistoryPage } from '../pages/patient/AppointmentHistoryPage';
 import { VNPayCallbackPage } from '../pages/patient/VNPayCallbackPage';
+import PatientJourneyTrackerPage from '../pages/patient/PatientJourneyTrackerPage';
+import ReceptionistCheckInAndCashierPage from '../pages/receptionist/ReceptionistCheckInAndCashierPage';
+import DoctorConsultationWorkspace from '../pages/doctor/DoctorConsultationWorkspace';
+import TechnicianTaskQueuePage from '../pages/technician/TechnicianTaskQueuePage';
 
 import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
@@ -42,8 +47,31 @@ export const AppRoutes = () => {
           <Route path="/clinics" element={<ClinicSearchPage />} />
           <Route path="/booking" element={<DoctorBookingPage />} />
           <Route path="/ai-suggest" element={<AiSuggestPage />} />
+          <Route path="/outpatient/journey/:visitId" element={<PatientJourneyTrackerPage />} />
+          <Route path="/outpatient/journey/appointment/:appointmentId" element={<PatientJourneyTrackerPage />} />
         </Route>
         <Route path="/payment/vnpay-callback" element={<VNPayCallbackPage />} />
+      </Route>
+
+      {/* Outpatient Portal Staff Protected Routes */}
+      <Route element={<ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST, ROLES.CLINIC_ADMIN, ROLES.CLINIC_PARTNER, ROLES.ADMIN]} />}>
+        <Route element={<OutpatientLayout />}>
+          <Route path="/outpatient/receptionist" element={<ReceptionistCheckInAndCashierPage />} />
+        </Route>
+      </Route>
+
+      <Route path="/outpatient/assistant" element={<Navigate to="/outpatient/doctor" replace />} />
+
+      <Route element={<ProtectedRoute allowedRoles={[ROLES.DOCTOR, ROLES.CLINIC_ADMIN, ROLES.ADMIN]} />}>
+        <Route element={<OutpatientLayout />}>
+          <Route path="/outpatient/doctor" element={<DoctorConsultationWorkspace />} />
+        </Route>
+      </Route>
+
+      <Route element={<ProtectedRoute allowedRoles={[ROLES.TECHNICIAN, ROLES.CLINIC_ADMIN, ROLES.ADMIN]} />}>
+        <Route element={<OutpatientLayout />}>
+          <Route path="/outpatient/technician" element={<TechnicianTaskQueuePage />} />
+        </Route>
       </Route>
 
       {/* Auth Routes */}

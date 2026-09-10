@@ -311,7 +311,7 @@ export const DoctorBookingPage = () => {
               )}
 
               {/* Chọn ngày khám (Range) */}
-              {/* <div className="space-y-1.5">
+              <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-600">Chọn ngày khám</label>
                 <div className="grid grid-cols-2 gap-2">
                   <input
@@ -327,7 +327,7 @@ export const DoctorBookingPage = () => {
                     className="bg-white border border-slate-300 rounded-xl px-2 py-1.5 text-xs text-slate-700 focus:ring-2 focus:ring-sky-500"
                   />
                 </div>
-              </div> */}
+              </div>
 
               {/* Sử dụng Bảo hiểm y tế
               <div className="space-y-2 pt-2 border-t border-slate-100">

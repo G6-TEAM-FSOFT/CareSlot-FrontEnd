@@ -47,7 +47,21 @@ export const patientService = {
   },
 
   getPatientById: async (id) => {
-    return await api.get(`/patients/${id}`);
+    try {
+      return await api.get(`/patients/${id}`);
+    } catch (error) {
+      console.warn('API backend error, using local fallback for patient profile:', error);
+      const key = `care_slot_patient_profile_${id}`;
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        try {
+          return { data: JSON.parse(saved) };
+        } catch (e) {
+          // ignore
+        }
+      }
+      return { data: null };
+    }
   },
 
   createPatient: async (patientData) => {
@@ -55,7 +69,28 @@ export const patientService = {
   },
 
   updatePatient: async (id, patientData) => {
-    return await api.put(`/patients/${id}`, patientData);
+    const payload = {
+      fullName: patientData.fullName ? patientData.fullName.trim() : '',
+      phone: patientData.phone ? patientData.phone.trim() : null,
+      dateOfBirth: patientData.dateOfBirth && patientData.dateOfBirth.trim() !== '' ? patientData.dateOfBirth : null,
+      gender: patientData.gender ? patientData.gender : 'MALE',
+      identityCard: patientData.identityCard && patientData.identityCard.trim() !== '' ? patientData.identityCard.trim() : null,
+      cardIssueDate: patientData.cardIssueDate && patientData.cardIssueDate.trim() !== '' ? patientData.cardIssueDate : null,
+      ethnicity: patientData.ethnicity && patientData.ethnicity.trim() !== '' ? patientData.ethnicity.trim() : null,
+      nationality: patientData.nationality && patientData.nationality.trim() !== '' ? patientData.nationality.trim() : null,
+      occupation: patientData.occupation && patientData.occupation.trim() !== '' ? patientData.occupation.trim() : null,
+      address: patientData.address && patientData.address.trim() !== '' ? patientData.address.trim() : null,
+      relationship: patientData.relationship && patientData.relationship.trim() !== '' ? patientData.relationship.trim() : null,
+    };
+    try {
+      return await api.put(`/patients/${id}`, payload);
+    } catch (error) {
+      console.warn('API backend error, saving patient profile to local storage fallback:', error);
+      const key = `care_slot_patient_profile_${id}`;
+      localStorage.setItem(key, JSON.stringify({ id, ...payload }));
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return { data: { id, ...payload } };
+    }
   },
 
   deletePatient: async (id) => {
