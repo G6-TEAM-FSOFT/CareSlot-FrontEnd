@@ -24,7 +24,13 @@ export const LoginPage = () => {
       const authData = response.data;
       login(authData, authData.token);
 
-      if (authData.role === ROLES.CLINIC_PARTNER || authData.role === ROLES.CLINIC_STAFF) {
+      if (authData.role === ROLES.RECEPTIONIST) {
+        navigate('/outpatient/receptionist');
+      } else if (authData.role === ROLES.CLINICAL_ASSISTANT || authData.role === ROLES.DOCTOR) {
+        navigate('/outpatient/doctor');
+      } else if (authData.role === ROLES.TECHNICIAN) {
+        navigate('/outpatient/technician');
+      } else if (authData.role === ROLES.CLINIC_PARTNER || authData.role === ROLES.CLINIC_STAFF || authData.role === ROLES.CLINIC_ADMIN) {
         navigate('/clinic-partner/profile');
       } else if (authData.role === ROLES.ADMIN) {
         navigate('/admin/dashboard');
@@ -48,8 +54,8 @@ export const LoginPage = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-xl font-bold text-slate-800 mb-1">Đăng Nhập CareSlot</h3>
-        <p className="text-xs text-slate-500">Nhập email và mật khẩu tài khoản của bạn để đăng nhập</p>
+        <h3 className="text-xl font-bold text-slate-800 mb-1">Đăng Nhập CareSlot System</h3>
+        <p className="text-xs text-slate-500">Chọn tài khoản mẫu theo Role hoặc nhập email/mật khẩu của bạn</p>
       </div>
 
       {error && (
@@ -61,29 +67,38 @@ export const LoginPage = () => {
 
       {/* Preset Accounts Quick Pickers */}
       <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+        <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Tài khoản thử nghiệm theo Role:</div>
         <div className="grid grid-cols-2 gap-1.5 text-xs">
           <button
             type="button"
-            onClick={() => fillAccount('staff1@careslot.vn', '123456')}
+            onClick={() => fillAccount('receptionist.tonthattung@careslot.vn', '123456')}
             className="px-2 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-cyan-500 hover:text-cyan-600 text-left transition flex items-center gap-1.5"
           >
-            <Hospital className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
-            <span className="truncate">BV ĐHYHN</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
+            <span className="truncate">Lễ tân & Thu ngân</span>
           </button>
           <button
             type="button"
-            onClick={() => fillAccount('staff.hoangmai@careslot.vn', '123456')}
-            className="px-2 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-cyan-500 hover:text-cyan-600 text-left transition flex items-center gap-1.5"
+            onClick={() => fillAccount('doctor.minh@careslot.vn', '123456')}
+            className="px-2 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-600 text-left transition flex items-center gap-1.5"
           >
-            <Hospital className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
-            <span className="truncate">Staff (Hoàng Mai)</span>
+            <Hospital className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span className="truncate">BS. Hoàng Minh</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => fillAccount('tech.lab@careslot.vn', '123456')}
+            className="px-2 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-amber-500 hover:text-amber-600 text-left transition flex items-center gap-1.5"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span className="truncate">KTV Cận lâm sàng</span>
           </button>
           <button
             type="button"
             onClick={() => fillAccount('nguyenvanan@example.com', '123456')}
-            className="px-2 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-indigo-500 hover:text-indigo-600 text-left transition flex items-center gap-1.5"
+            className="px-2 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-blue-500 hover:text-blue-600 text-left transition flex items-center gap-1.5"
           >
-            <UserCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <UserCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
             <span className="truncate">Bệnh nhân (Văn An)</span>
           </button>
           <button
@@ -92,7 +107,7 @@ export const LoginPage = () => {
             className="px-2 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-slate-800 hover:text-slate-900 text-left transition flex items-center gap-1.5"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-slate-800 shrink-0" />
-            <span className="truncate">Admin</span>
+            <span className="truncate">System Admin</span>
           </button>
         </div>
       </div>

@@ -24,10 +24,10 @@ export const Header = () => {
           <Link to="/booking" className="hover:text-indigo-600 transition">Đặt Khám Bác Sĩ</Link>
           <Link to="/patients" className="hover:text-indigo-600 transition">Hồ Sơ Bệnh Nhân</Link>
           <Link to="/history" className="hover:text-indigo-600 transition">Lịch Khám Đã Đặt</Link>
-          <Link to="/ai-suggest" className="flex items-center gap-1.5 text-indigo-600 hover:text-indigo-700 font-semibold bg-indigo-50 px-3 py-1.5 rounded-full transition">
+          {/* <Link to="/ai-suggest" className="flex items-center gap-1.5 text-indigo-600 hover:text-indigo-700 font-semibold bg-indigo-50 px-3 py-1.5 rounded-full transition">
             <Sparkles className="w-4 h-4 text-indigo-500" />
             AI Gợi Ý Khám
-          </Link>
+          </Link> */}
         </nav>
 
 
