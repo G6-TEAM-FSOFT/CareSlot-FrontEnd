@@ -9,7 +9,7 @@ import { OutpatientLayout } from '../layouts/OutpatientLayout';
 
 import { HomePage } from '../pages/patient/HomePage';
 import { ClinicSearchPage } from '../pages/patient/ClinicSearchPage';
-import { DoctorBookingPage } from '../pages/patient/DoctorBookingPage';
+import { AppointmentBookingPage } from '../pages/patient/AppointmentBookingPage';
 import { PatientProfilesPage } from '../pages/patient/PatientProfilesPage';
 import { AiSuggestPage } from '../pages/patient/AiSuggestPage';
 import { AppointmentHistoryPage } from '../pages/patient/AppointmentHistoryPage';
@@ -45,7 +45,7 @@ export const AppRoutes = () => {
           <Route path="/patients" element={<PatientProfilesPage />} />
           <Route path="/history" element={<AppointmentHistoryPage />} />
           <Route path="/clinics" element={<ClinicSearchPage />} />
-          <Route path="/booking" element={<DoctorBookingPage />} />
+          <Route path="/booking" element={<AppointmentBookingPage />} />
           <Route path="/ai-suggest" element={<AiSuggestPage />} />
           <Route path="/outpatient/journey/:visitId" element={<PatientJourneyTrackerPage />} />
           <Route path="/outpatient/journey/appointment/:appointmentId" element={<PatientJourneyTrackerPage />} />

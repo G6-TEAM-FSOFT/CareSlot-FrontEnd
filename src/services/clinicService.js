@@ -39,6 +39,10 @@ export const slotService = {
   },
 };
 
+export const bookingService = {
+  getAvailability: async (params) => api.get('/booking/availability', { params }),
+};
+
 export const appointmentService = {
   createAppointment: async (bookingData) => {
     return await api.post('/appointments', bookingData);

@@ -17,9 +17,11 @@ import {
   Sparkles,
   QrCode,
   ShieldCheck,
-  PhoneCall
+  PhoneCall,
+  Info
 } from 'lucide-react';
 import { paymentService } from '../../services/paymentService';
+import { formatDate, timeLabel } from '../../components/booking/bookingUtils';
 
 export const VNPayCallbackPage = () => {
   const location = useLocation();
@@ -147,13 +149,22 @@ export const VNPayCallbackPage = () => {
               <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto text-emerald-600 shadow-lg mb-4 transform hover:scale-105 transition">
                 <CheckCircle2 className="w-12 h-12" />
               </div>
-              <span className="bg-emerald-500/30 text-emerald-100 border border-emerald-300/30 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                Giao dịch thành công
-              </span>
-              <h1 className="text-2xl font-extrabold mt-2">Thanh Toán Đặt Cọc Thành Công!</h1>
+              <h1 className="text-2xl font-extrabold mt-2">Đặt lịch thành công!</h1>
               <p className="text-xs text-emerald-100 mt-1">
-                Lịch hẹn khám bệnh của bạn đã được xác nhận chính thức trên hệ thống CareSlot.
+                Đã thanh toán tiền đặt cọc 100.000đ
               </p>
+
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+                <span className="bg-emerald-500/30 text-emerald-100 border border-emerald-300/30 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Lịch hẹn đã xác nhận
+                </span>
+                {appointment?.bookingCode && (
+                  <span className="bg-white/20 text-white border border-white/30 text-xs font-mono font-bold px-3 py-1 rounded-full">
+                    Mã đặt lịch: {appointment.bookingCode}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Content Ticket */}
@@ -163,109 +174,102 @@ export const VNPayCallbackPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
                 {/* Column 1: Appointment Info */}
                 <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200/60 space-y-3">
-                  <h3 className="font-bold text-sky-900 text-xs border-b border-slate-200 pb-2.5 flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-sky-600" />
-                    Thông tin Lịch hẹn
+                  <h3 className="font-bold text-slate-900 text-xs border-b border-slate-200 pb-2.5 flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-indigo-600" />
+                    Thông tin lịch khám
                   </h3>
 
                   <div className="space-y-2.5 text-slate-700">
-                    <div className="flex items-start gap-2">
-                      <User className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                      <div>
-                        <span className="text-slate-400 text-[11px] block">Bệnh nhân</span>
-                        <span className="font-bold text-slate-900">{appointment?.patientName || 'Bệnh nhân'}</span>
-                      </div>
+                    <div className="flex justify-between py-1 border-b border-slate-100">
+                      <span className="text-slate-500">Người khám:</span>
+                      <span className="font-bold text-slate-900">{appointment?.patientName || 'Bệnh nhân'}</span>
                     </div>
 
-                    <div className="flex items-start gap-2">
-                      <User className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                      <div>
-                        <span className="text-slate-400 text-[11px] block">Bác sĩ phụ trách</span>
-                        <span className="font-bold text-slate-900">{appointment?.doctorName || 'Bác sĩ chuyên khoa'}</span>
-                        <p className="text-slate-500 text-[11px]">{appointment?.specialtyName}</p>
-                      </div>
+                    <div className="flex justify-between py-1 border-b border-slate-100">
+                      <span className="text-slate-500">Chuyên khoa:</span>
+                      <span className="font-bold text-slate-900">{appointment?.specialtyName || 'Chuyên khoa'}</span>
                     </div>
 
-                    <div className="flex items-start gap-2">
-                      <Clock className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                      <div>
-                        <span className="text-slate-400 text-[11px] block">Thời gian khám</span>
-                        <span className="font-bold text-sky-800">
-                          {appointment?.startTime ? appointment.startTime.substring(0, 5) : ''} - {appointment?.endTime ? appointment.endTime.substring(0, 5) : ''} ({appointment?.appointmentDate})
-                        </span>
-                      </div>
+                    <div className="flex justify-between py-1 border-b border-slate-100">
+                      <span className="text-slate-500">Ngày khám:</span>
+                      <span className="font-bold text-slate-900">{formatDate(appointment?.appointmentDate) || paymentData.appointmentDate || 'N/A'}</span>
                     </div>
 
-                    <div className="flex items-start gap-2">
-                      <Building className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                      <div>
-                        <span className="text-slate-400 text-[11px] block">Cơ sở & Phòng khám</span>
-                        <span className="font-semibold text-slate-800">{appointment?.clinicName || 'Bệnh viện ĐH Y Hà Nội'}</span>
-                        <p className="text-slate-500 text-[11px]">{appointment?.roomName || 'Phòng khám chuyên khoa'}</p>
-                      </div>
+                    <div className="flex justify-between py-1 border-b border-slate-100">
+                      <span className="text-slate-500">Khung giờ:</span>
+                      <span className="font-bold text-indigo-700">
+                        {appointment?.startTime ? timeLabel(appointment.startTime) : ''}
+                        {appointment?.endTime ? ` - ${timeLabel(appointment.endTime)}` : ''}
+                      </span>
                     </div>
+
+                    <div className="flex justify-between py-1 border-b border-slate-100">
+                      <span className="text-slate-500">Cơ sở:</span>
+                      <span className="font-semibold text-slate-900 text-right">{appointment?.clinicName || 'Cơ sở y tế'}</span>
+                    </div>
+
+                    {appointment?.clinicAddress && (
+                      <div className="flex justify-between py-1">
+                        <span className="text-slate-500">Địa chỉ:</span>
+                        <span className="text-slate-700 text-right max-w-[200px]">{appointment.clinicAddress}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Column 2: VNPay Payment Receipt Info */}
                 <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200/60 space-y-3">
-                  <h3 className="font-bold text-sky-900 text-xs border-b border-slate-200 pb-2.5 flex items-center gap-1.5">
-                    <CreditCard className="w-4 h-4 text-sky-600" />
-                    Biên lai Thanh toán VNPay
+                  <h3 className="font-bold text-slate-900 text-xs border-b border-slate-200 pb-2.5 flex items-center gap-1.5">
+                    <CreditCard className="w-4 h-4 text-indigo-600" />
+                    Thông tin thanh toán
                   </h3>
 
                   <div className="space-y-2 text-slate-700">
                     <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">Số tiền đặt cọc đã trả:</span>
+                      <span className="text-slate-500">Tiền cọc đã thanh toán:</span>
                       <span className="font-bold text-emerald-600 text-sm">
-                        {appointment?.depositAmount ? Number(appointment.depositAmount).toLocaleString() : Number(paymentData.vnp_Amount / 100 || 100000).toLocaleString()} đ
+                        {appointment?.depositAmount ? Number(appointment.depositAmount).toLocaleString() : Number((paymentData.vnp_Amount || 10000000) / 100).toLocaleString()} đ
                       </span>
                     </div>
 
                     <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">Mã giao dịch VNPay:</span>
-                      <span className="font-mono font-semibold text-slate-800">{paymentData.vnp_TransactionNo || 'VN' + Date.now()}</span>
+                      <span className="text-slate-500">Trạng thái:</span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                        Thành công
+                      </span>
                     </div>
 
                     <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">Mã tham chiếu (TxnRef):</span>
-                      <span className="font-mono font-semibold text-slate-800">{paymentData.vnp_TxnRef || 'N/A'}</span>
-                    </div>
-
-                    <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">Ngân hàng thanh toán:</span>
-                      <span className="font-bold text-sky-700">{paymentData.vnp_BankCode || 'NCB'}</span>
+                      <span className="text-slate-500">Mã giao dịch:</span>
+                      <span className="font-mono font-semibold text-slate-800">{paymentData.vnp_TransactionNo || paymentData.vnp_TxnRef || 'GD-001234'}</span>
                     </div>
 
                     <div className="flex justify-between py-1">
-                      <span className="text-slate-500">Trạng thái đặt cọc:</span>
-                      <span className="font-bold text-emerald-600">ĐÃ THANH TOÁN (PAID)</span>
+                      <span className="text-slate-500">Thời gian:</span>
+                      <span className="font-semibold text-slate-800">
+                        {paymentData.vnp_PayDate ? `${paymentData.vnp_PayDate.substring(6,8)}/${paymentData.vnp_PayDate.substring(4,6)}/${paymentData.vnp_PayDate.substring(0,4)} - ${paymentData.vnp_PayDate.substring(8,10)}:${paymentData.vnp_PayDate.substring(10,12)}` : new Date().toLocaleDateString('vi-VN')}
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Instructions notice */}
-              <div className="p-4 bg-sky-50 border border-sky-200 rounded-2xl text-xs text-sky-900 space-y-1">
-                <h4 className="font-bold flex items-center gap-1.5 text-sky-900">
-                  <Sparkles className="w-4 h-4 text-sky-600" />
-                  Hướng dẫn khi tới khám:
-                </h4>
-                <ul className="list-disc list-inside space-y-1 text-sky-800 text-[11.5px]">
-                  <li>Vui lòng có mặt tại phòng khám trước giờ hẹn 15 phút.</li>
-                  <li>Mang theo giấy tờ tùy thân (CCCD/BHYT nếu có) và mã Booking Code trên.</li>
-                  <li>Số tiền còn lại (nếu có) sẽ được thanh toán trực tiếp tại quầy thu ngân phòng khám.</li>
-                </ul>
+              <div className="p-4 bg-sky-50 border border-sky-200 rounded-2xl text-xs text-sky-900 flex items-start gap-2.5">
+                <Info className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" />
+                <p className="leading-relaxed">
+                  Xuất trình mã đặt lịch tại quầy tiếp đón. <strong>Bác sĩ và phòng khám sẽ được thông báo sau khi hoàn tất check-in.</strong>
+                </p>
               </div>
 
               {/* Footer Actions (Hidden when printing) */}
               <div className="print:hidden pt-4 flex flex-col sm:flex-row items-center gap-3">
                 <button
                   onClick={() => navigate('/history')}
-                  className="w-full sm:w-1/2 py-3 px-4 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition shadow-md flex items-center justify-center gap-2"
+                  className="w-full sm:w-1/2 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition shadow-md flex items-center justify-center gap-2"
                 >
                   <FileText className="w-4 h-4" />
-                  <span>Quản lý lịch khám của tôi</span>
+                  <span>Xem lịch khám đã đặt</span>
                 </button>
                 <button
                   onClick={() => navigate('/')}
