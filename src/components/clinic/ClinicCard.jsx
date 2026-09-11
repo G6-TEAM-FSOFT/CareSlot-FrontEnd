@@ -2,7 +2,10 @@ import React from 'react';
 import { MapPin, Phone, Star, ShieldCheck, ArrowRight, Building2, Stethoscope, Clock, Navigation, Banknote } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-export const ClinicCard = ({ clinic }) => {
+export const ClinicCard = ({ clinic, specialtyId }) => {
+  const bookingParams = new URLSearchParams({ clinicId: String(clinic.id) });
+  if (specialtyId) bookingParams.set('specialtyId', String(specialtyId));
+  const bookingUrl = `/booking?${bookingParams.toString()}`;
   // Format Consultation Fee
   const renderFee = () => {
     const min = clinic.minConsultationFee;
@@ -68,7 +71,7 @@ export const ClinicCard = ({ clinic }) => {
 
         <div>
           <Link
-            to={`/booking?clinicId=${clinic.id}`}
+            to={bookingUrl}
             className="text-lg font-bold text-slate-800 hover:text-indigo-600 transition flex items-center gap-1.5"
           >
             <Building2 className="w-5 h-5 text-indigo-500 shrink-0 hidden sm:inline" />
@@ -143,7 +146,7 @@ export const ClinicCard = ({ clinic }) => {
 
         <div className="w-full mt-4 space-y-2">
           <Link
-            to={`/booking?clinicId=${clinic.id}`}
+            to={bookingUrl}
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl text-center text-xs transition flex items-center justify-center gap-1.5 shadow-sm shadow-indigo-100 cursor-pointer"
           >
             <Stethoscope className="w-4 h-4" />

@@ -23,6 +23,7 @@ export default function ReceptionistCheckInAndCashierPage() {
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [selectedAptForModal, setSelectedAptForModal] = useState(null);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [initialReassignMode, setInitialReassignMode] = useState(false);
   const [patientForm, setPatientForm] = useState({
     fullName: '',
     phone: '',
@@ -72,8 +73,9 @@ export default function ReceptionistCheckInAndCashierPage() {
     }
   };
 
-  const openPatientModal = async (apt) => {
+  const openPatientModal = async (apt, reassign = false) => {
     setSelectedAptForModal(apt);
+    setInitialReassignMode(Boolean(reassign));
     const p = apt.patientProfile || {};
     
     const initialForm = {
@@ -163,7 +165,7 @@ export default function ReceptionistCheckInAndCashierPage() {
     }
   };
 
-  const handleSaveProfileAndCheckIn = async (e) => {
+  const handleSaveProfileAndCheckIn = async (e, reassignmentData = {}) => {
     if (e) e.preventDefault();
     if (!selectedAptForModal) return;
 
@@ -173,11 +175,25 @@ export default function ReceptionistCheckInAndCashierPage() {
     try {
       await patientService.updatePatient(profileId, patientForm);
 
-      const res = await outpatientService.checkIn(selectedAptForModal.id);
+      const checkInPayload = {
+        appointmentId: selectedAptForModal.id,
+        ...(reassignmentData.replacementSlotId ? {
+          replacementSlotId: reassignmentData.replacementSlotId,
+          reason: reassignmentData.reason
+        } : {})
+      };
+
+      const res = await outpatientService.checkIn(checkInPayload);
       if (res && res.data) {
         setActiveVisit(res.data);
         localStorage.setItem('receptionist_active_visit_id', res.data.id);
-        setMessage({ type: 'success', text: `Cập nhật hồ sơ & Check-in thành công! Khởi tạo Đợt khám Mã: ${res.data.visitCode} cho bệnh nhân ${patientForm.fullName}` });
+        const reassignText = reassignmentData.replacementSlotId
+          ? ` (Đã điều chuyển sang Bác sĩ: ${res.data.primaryDoctorName || 'mới'})`
+          : '';
+        setMessage({
+          type: 'success',
+          text: `Cập nhật hồ sơ & Check-in thành công!${reassignText} Khởi tạo Đợt khám Mã: ${res.data.visitCode} cho bệnh nhân ${patientForm.fullName}`
+        });
         fetchAppointments(listTab);
         setShowPatientModal(false);
       }
@@ -349,6 +365,7 @@ export default function ReceptionistCheckInAndCashierPage() {
         onClose={() => setShowPatientModal(false)}
         onSaveProfileOnly={handleSavePatientProfileOnly}
         onSaveProfileAndCheckIn={handleSaveProfileAndCheckIn}
+        initialReassignMode={initialReassignMode}
       />
     </div>
   );

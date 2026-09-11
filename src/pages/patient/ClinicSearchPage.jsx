@@ -210,7 +210,7 @@ export const ClinicSearchPage = () => {
             Tìm Kiếm & Đặt Lịch Phòng Khám Uy Tín
           </h1>
           <p className="text-xs sm:text-sm text-indigo-100 leading-relaxed max-w-2xl">
-            Lựa chọn phòng khám đạt chuẩn, xem bác sĩ theo chuyên khoa và giữ lịch khám nhanh chóng với mức cọc bảo đảm minh bạch.
+            Lựa chọn cơ sở, chuyên khoa và khung giờ phù hợp. Đặt lịch khám với tiền cọc cố định 100.000đ.
           </p>
 
           {/* Active filter badges */}
@@ -456,7 +456,7 @@ export const ClinicSearchPage = () => {
           {!loading && !error && clinics.length > 0 && (
             <div className="space-y-4">
               {clinics.map((clinic) => (
-                <ClinicCard key={clinic.id} clinic={clinic} />
+                <ClinicCard key={clinic.id} clinic={clinic} specialtyId={specialtyId} />
               ))}
 
               {/* Pagination */}

@@ -177,22 +177,24 @@ export const PaymentModal = ({ isOpen, onClose, appointment, onSuccessRedirect }
               <div className="flex items-start gap-2">
                 <Building2 className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
                 <div>
-                  <span className="text-slate-400 block text-[11px]">Bác sĩ & Chuyên khoa</span>
-                  <span className="font-bold text-slate-800">{appointment.doctorName || 'Bác sĩ chuyên khoa'}</span>
-                  <p className="text-[11px] text-slate-500">{appointment.specialtyName || ''}</p>
+                  <span className="text-slate-400 block text-[11px]">Chuyên khoa</span>
+                  <span className="font-bold text-slate-800">{appointment.specialtyName || 'Chuyên khoa khám'}</span>
                 </div>
               </div>
 
               <div className="flex items-start gap-2 sm:col-span-2">
                 <Calendar className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
                 <div>
-                  <span className="text-slate-400 block text-[11px]">Thời gian & Phòng khám</span>
+                  <span className="text-slate-400 block text-[11px]">Thời gian & Cơ sở khám</span>
                   <span className="font-bold text-sky-900">
-                    {appointment.startTime ? appointment.startTime.substring(0, 5) : ''} - {appointment.endTime ? appointment.endTime.substring(0, 5) : ''} ({appointment.appointmentDate})
+                    {appointment.startTime ? String(appointment.startTime).substring(0, 5) : ''} - {appointment.endTime ? String(appointment.endTime).substring(0, 5) : ''} ({appointment.appointmentDate})
                   </span>
-                  <p className="text-[11px] text-slate-600">{appointment.clinicName} {appointment.roomName ? `(${appointment.roomName})` : ''}</p>
+                  <p className="text-[11px] text-slate-600">{appointment.clinicName}</p>
                 </div>
               </div>
+            </div>
+            <div className="pt-2 border-t border-slate-200/60 text-[11px] text-indigo-700 italic">
+              * Bác sĩ và phòng khám sẽ được thông báo sau khi hoàn tất check-in.
             </div>
           </div>
 

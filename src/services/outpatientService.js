@@ -1,8 +1,15 @@
 import api from '../config/axios';
 
 export const outpatientService = {
-  checkIn: async (appointmentId) => {
-    return await api.post('/outpatient/receptionist/check-in', { appointmentId });
+  checkIn: async (dataOrAppointmentId) => {
+    const payload = typeof dataOrAppointmentId === 'object' && dataOrAppointmentId !== null
+      ? dataOrAppointmentId
+      : { appointmentId: dataOrAppointmentId };
+    return await api.post('/outpatient/receptionist/check-in', payload);
+  },
+
+  getReplacementSlots: async (appointmentId) => {
+    return await api.get(`/outpatient/receptionist/appointments/${appointmentId}/replacement-slots`);
   },
 
   recordVitalSigns: async (data) => {

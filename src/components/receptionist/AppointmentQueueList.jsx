@@ -118,8 +118,8 @@ export default function AppointmentQueueList({
             const phone = apt.patientProfile?.phone || apt.patientPhone || 'N/A';
             const gender = apt.patientProfile?.gender || apt.patientGender;
             const dob = apt.patientProfile?.dateOfBirth || apt.patientProfile?.dob || apt.patientDob;
-            const doctorName = apt.slot?.doctor?.fullName || apt.doctorName || 'BS. Chuyên Khoa';
-            const roomName = apt.roomName || apt.specialtyName || 'Phòng khám Ngoại Trú';
+            const doctorName = apt.doctorName || apt.slot?.doctor?.fullName || 'BS. Chuyên Khoa';
+            const roomName = apt.roomName ? `${apt.roomName}${apt.specialtyName ? ` (${apt.specialtyName})` : ''}` : (apt.specialtyName || 'Phòng khám Ngoại Trú');
             const timeSlot = apt.startTime ? `${apt.startTime.substring(0, 5)}${apt.endTime ? ` - ${apt.endTime.substring(0, 5)}` : ''}` : 'Giờ hẹn linh hoạt';
             const aptDate = apt.appointmentDate || 'Hôm nay';
             const symptom = apt.symptomNote;
@@ -183,7 +183,7 @@ export default function AppointmentQueueList({
                   {listTab === 'CONFIRMED' ? (
                     <button
                       disabled={loading}
-                      onClick={() => onOpenPatientModal(apt)}
+                      onClick={() => onOpenPatientModal(apt, false)}
                       className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 font-extrabold text-white text-xs rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-1.5"
                     >
                       <UserCheck className="w-3.5 h-3.5" />
