@@ -1,5 +1,7 @@
 import React from 'react';
-import { CheckCircle2, Stethoscope, Pill, Activity } from 'lucide-react';
+import { CheckCircle2, Stethoscope, Pill, Activity, Printer } from 'lucide-react';
+import { parseClinicalNote } from '../../utils/formatters';
+import PdfPrintButton from '../PdfPrintButton';
 
 export default function CompletedVisitSummaryCard({
   visit,
@@ -10,6 +12,8 @@ export default function CompletedVisitSummaryCard({
   formDataText
 }) {
   if (!visit || visit.status !== 'COMPLETED') return null;
+
+  const targetPatientId = visit.patientProfileId || visit.patientProfile?.id || 1;
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -24,6 +28,41 @@ export default function CompletedVisitSummaryCard({
         <span className="px-3 py-1 bg-white/20 text-white font-mono font-bold text-xs rounded-xl backdrop-blur-md">
           VISIT #{visit.id}
         </span>
+      </div>
+
+      {/* PDF Export Action Bar */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 font-bold text-xs text-slate-700">
+          <Printer className="w-4 h-4 text-teal-600" />
+          <span>Xuất File PDF & In Chứng Từ:</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <PdfPrintButton
+            patientId={targetPatientId}
+            visitId={visit.id}
+            type="examination"
+            label="In Phiếu Khám"
+            variant="indigo"
+            size="sm"
+          />
+          <PdfPrintButton
+            patientId={targetPatientId}
+            visitId={visit.id}
+            prescriptionId={visit.prescription?.id}
+            type="prescription"
+            label="In Đơn Thuốc"
+            variant="emerald"
+            size="sm"
+          />
+          <PdfPrintButton
+            patientId={targetPatientId}
+            visitId={visit.id}
+            type="summary"
+            label="Tổng Hợp Lượt Khám"
+            variant="secondary"
+            size="sm"
+          />
+        </div>
       </div>
 
       {/* Diagnosis & Disposition Summary */}
@@ -117,8 +156,8 @@ export default function CompletedVisitSummaryCard({
           {visit.clinicalNotes && visit.clinicalNotes.length > 0 && (
             <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-1 text-xs">
               <span className="text-[10px] text-slate-500 font-bold uppercase block">Bệnh Sử Ban Đầu:</span>
-              <div className="font-mono text-slate-800">
-                {formDataText}
+              <div className="font-medium text-slate-800">
+                {parseClinicalNote(formDataText)}
               </div>
             </div>
           )}

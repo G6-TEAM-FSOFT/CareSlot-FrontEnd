@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserCheck, User, FileText, CreditCard, X, RefreshCw, Save, Calendar, Clock, Stethoscope, MapPin, Shuffle, AlertTriangle } from 'lucide-react';
 import { outpatientService } from '../../services/outpatientService';
+import PdfPrintButton from '../PdfPrintButton';
 
 export default function PatientProfileModal({
   show,
@@ -76,6 +77,9 @@ export default function PatientProfileModal({
     }
   };
 
+  const patientId = selectedApt.patientProfileId || selectedApt.patientProfile?.id;
+  const visitId = selectedApt.visitId || selectedApt.visit?.id;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
       <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -113,9 +117,39 @@ export default function PatientProfileModal({
                 <Calendar className="w-4 h-4 text-cyan-600" />
                 Thông Tin Chi Tiết Lịch Hẹn (Appointment Details)
               </h4>
-              <span className="px-2.5 py-0.5 rounded-md bg-cyan-100 text-cyan-900 border border-cyan-300 font-mono font-bold text-[11px]">
-                #{selectedApt.id} • Mã Booking: {selectedApt.bookingCode || 'BK-N/A'}
-              </span>
+              <div className="flex items-center gap-2">
+                {patientId && visitId && (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <PdfPrintButton
+                      patientId={patientId}
+                      visitId={visitId}
+                      type="examination"
+                      label="In Phiếu Khám"
+                      variant="indigo"
+                      size="sm"
+                    />
+                    <PdfPrintButton
+                      patientId={patientId}
+                      visitId={visitId}
+                      type="prescription"
+                      label="In Đơn Thuốc"
+                      variant="emerald"
+                      size="sm"
+                    />
+                    <PdfPrintButton
+                      patientId={patientId}
+                      visitId={visitId}
+                      type="summary"
+                      label="Tổng Hợp Lượt Khám"
+                      variant="secondary"
+                      size="sm"
+                    />
+                  </div>
+                )}
+                <span className="px-2.5 py-0.5 rounded-md bg-cyan-100 text-cyan-900 border border-cyan-300 font-mono font-bold text-[11px]">
+                  #{selectedApt.id} • Mã Booking: {selectedApt.bookingCode || 'BK-N/A'}
+                </span>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">

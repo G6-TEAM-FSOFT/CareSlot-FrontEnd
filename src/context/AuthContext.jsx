@@ -1,46 +1,68 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
+import { authService } from '../services/authService';
 
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('care_slot_token') || null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const savedUser = localStorage.getItem('care_slot_user');
-    if (savedUser && token) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error('Failed to parse cached user data', e);
+  const fetchUser = useCallback(async () => {
+    try {
+      const res = await authService.getCurrentUser();
+      if (res && res.data) {
+        setUser(res.data);
+      } else {
+        setUser(null);
       }
+    } catch (err) {
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, [token]);
+  }, []);
 
-  const login = (userData, authToken) => {
-    setUser(userData);
-    setToken(authToken);
-    localStorage.setItem('care_slot_token', authToken);
-    localStorage.setItem('care_slot_user', JSON.stringify(userData));
-    if (userData.clinicId) {
-      localStorage.setItem('care_slot_clinic_id', userData.clinicId);
-    } else {
-      localStorage.removeItem('care_slot_clinic_id');
+  useEffect(() => {
+    fetchUser();
+
+    const handleLogoutEvent = () => {
+      setUser(null);
+    };
+
+    window.addEventListener('auth:logout', handleLogoutEvent);
+    return () => {
+      window.removeEventListener('auth:logout', handleLogoutEvent);
+    };
+  }, [fetchUser]);
+
+  const login = async (credentials) => {
+    const res = await authService.login(credentials);
+    if (res && res.data) {
+      setUser(res.data);
     }
+    return res;
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('care_slot_token');
-    localStorage.removeItem('care_slot_user');
-    localStorage.removeItem('care_slot_clinic_id');
+  const register = async (userData) => {
+    const res = await authService.register(userData);
+    if (res && res.data) {
+      setUser(res.data);
+    }
+    return res;
+  };
+
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (e) {
+      console.warn('Logout request failed', e);
+    } finally {
+      setUser(null);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser: fetchUser }}>
       {children}
     </AuthContext.Provider>
   );
