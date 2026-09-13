@@ -13,4 +13,10 @@ export const partnerAppointmentService = {
   checkInAppointment: async (id) => {
     return await api.patch(`/partner/appointments/${id}/check-in`);
   },
+  getReplacementSlots: async (id) => {
+    return await api.get(`/partner/appointments/${id}/replacement-slots`);
+  },
+  reassignDoctor: async (id, data) => {
+    return await api.patch(`/partner/appointments/${id}/reassign`, data);
+  },
 };
