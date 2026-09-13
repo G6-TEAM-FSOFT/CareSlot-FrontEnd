@@ -121,17 +121,17 @@ export default function TechnicianTaskQueuePage() {
         }
       } else {
         // Initialize default payloads for new ready tasks
-    if (detectedTemplate === 'CBC') {
-      buildCbcPayload(cbc);
-    } else if (detectedTemplate === 'BIO') {
-      buildBioPayload(bio);
-    } else {
-      setTemplateType('IMAGING');
-      const imgType = name.includes('CT') || code.includes('CT') ? 'CT_SCAN' : 'ULTRASOUND';
-      const nextImg = { ...imaging, serviceType: imgType, imageUrls: [] };
-      setImaging(nextImg);
-      buildImagingPayload(nextImg);
-    }
+        if (detectedTemplate === 'CBC') {
+          buildCbcPayload(cbc);
+        } else if (detectedTemplate === 'BIO') {
+          buildBioPayload(bio);
+        } else {
+          setTemplateType('IMAGING');
+          const imgType = name.includes('CT') || code.includes('CT') ? 'CT_SCAN' : 'ULTRASOUND';
+          const nextImg = { ...imaging, serviceType: imgType, imageUrls: [] };
+          setImaging(nextImg);
+          buildImagingPayload(nextImg);
+        }
       }
     }
   }, [selectedTask]);
@@ -538,18 +538,17 @@ export default function TechnicianTaskQueuePage() {
                   />
                 </div>
 
-                {/* <button
+                <button
                   type="submit"
                   disabled={loading}
-                  className={`w-full py-3.5 font-extrabold text-white text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-95 ${
-                    isTaskCompleted 
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700' 
+                  className={`w-full py-3.5 font-extrabold text-white text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-95 ${isTaskCompleted
+                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700'
                       : 'bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-600 hover:to-emerald-700'
-                  }`}
+                    }`}
                 >
                   <Send className="w-4 h-4" />
                   {isTaskCompleted ? 'CẬP NHẬT LẠI KẾT QUẢ FINAL' : 'XÁC NHẬN & BẤM FINAL KẾT QUẢ'}
-                </button> */}
+                </button>
 
               </form>
             ) : (
