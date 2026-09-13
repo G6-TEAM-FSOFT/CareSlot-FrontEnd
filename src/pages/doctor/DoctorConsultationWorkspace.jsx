@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { outpatientService } from '../../services/outpatientService';
 import { patientService } from '../../services/patientService';
+import { useAuth } from '../../hooks/useAuth';
 import { 
   Stethoscope, CheckCircle2, RefreshCw, Sparkles, PlayCircle, Image as ImageIcon, ZoomIn, X 
 } from 'lucide-react';
@@ -16,8 +17,9 @@ import DoctorPatientProfileModal from '../../components/doctor/DoctorPatientProf
 import DoctorMedicalHistoryModal from '../../components/doctor/DoctorMedicalHistoryModal';
 
 export default function DoctorConsultationWorkspace() {
+  const { user } = useAuth();
   const [rooms, setRooms] = useState([]);
-  const [selectedRoomId, setSelectedRoomId] = useState(1); // Room 305
+  const [selectedRoomId, setSelectedRoomId] = useState(null);
   const [queueTab, setQueueTab] = useState('ALL'); // 'ALL' | 'WAITING' | 'IN_PROGRESS' | 'COMPLETED'
   const [queue, setQueue] = useState([]);
   const [selectedEncounter, setSelectedEncounter] = useState(null);
@@ -100,11 +102,7 @@ export default function DoctorConsultationWorkspace() {
 
   useEffect(() => {
     fetchRoomsAndCatalog();
-  }, []);
-
-  useEffect(() => {
-    fetchRoomsAndCatalog();
-  }, []);
+  }, [user?.clinicId]);
 
   useEffect(() => {
     if (selectedRoomId) {
@@ -124,9 +122,10 @@ export default function DoctorConsultationWorkspace() {
 
   const fetchRoomsAndCatalog = async () => {
     try {
+      const clinicId = user?.clinicId || 1;
       const [roomsRes, catalogRes] = await Promise.all([
-        outpatientService.getRooms(1),
-        outpatientService.getCatalog(1)
+        outpatientService.getRooms(clinicId),
+        outpatientService.getCatalog(clinicId)
       ]);
 
       if (roomsRes) {
@@ -136,8 +135,10 @@ export default function DoctorConsultationWorkspace() {
         );
         const activeRooms = consultationRooms.length > 0 ? consultationRooms : roomList;
         setRooms(activeRooms);
-        if (activeRooms.length > 0 && !activeRooms.some(r => r.id === selectedRoomId)) {
-          setSelectedRoomId(activeRooms[0].id);
+        if (activeRooms.length > 0) {
+          setSelectedRoomId(prev => (prev && activeRooms.some(r => r.id === prev)) ? prev : activeRooms[0].id);
+        } else {
+          setSelectedRoomId(null);
         }
       }
 
@@ -502,7 +503,7 @@ export default function DoctorConsultationWorkspace() {
               </div>
               <h1 className="text-2xl md:text-3xl font-extrabold flex items-center gap-3">
                 <Stethoscope className="w-8 h-8 text-teal-200" />
-                Doctor & Assistant Consultation Workspace
+                {user?.fullName ? `Bàn Khám: ${user.fullName}` : 'Doctor & Assistant Consultation Workspace'}
               </h1>
               <p className="text-xs md:text-sm text-teal-100 mt-1 max-w-2xl">
                 Khám lâm sàng, nhập chỉ số sinh tồn, bệnh sử ban đầu, chỉ định Cận lâm sàng (CLS Round 1 & Round 2), nhận KQ real-time từ KTV và kê đơn thuốc điện tử.
