@@ -13,9 +13,11 @@ import {
   XCircle,
   CreditCard,
   ShieldCheck,
-  FileText
+  FileText,
+  Shuffle
 } from 'lucide-react';
 import { partnerAppointmentService } from '../../services/clinic_partner/partnerAppointmentService';
+import ReassignDoctorModal from '../../components/clinic_partner/ReassignDoctorModal';
 
 export const AppointmentDetailPage = () => {
   const { id } = useParams();
@@ -23,6 +25,7 @@ export const AppointmentDetailPage = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showReassignModal, setShowReassignModal] = useState(false);
 
   const loadData = async () => {
     try {
@@ -159,14 +162,25 @@ export const AppointmentDetailPage = () => {
                 {appointment.status || 'CONFIRMED'}
               </span>
               {appointment.status === 'CONFIRMED' && (
-                <button
-                  type="button"
-                  onClick={handleCheckIn}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition cursor-pointer"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Xác nhận Check-in</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowReassignModal(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-xl border border-indigo-200 transition cursor-pointer"
+                    title="Điều phối lại Bác sĩ / Phòng khám"
+                  >
+                    <Shuffle className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Đổi Bác sĩ / Phòng khám</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCheckIn}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Xác nhận Check-in</span>
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -282,6 +296,16 @@ export const AppointmentDetailPage = () => {
           </div>
         )}
       </div>
+
+      {/* Modal Reassign Doctor */}
+      <ReassignDoctorModal
+        show={showReassignModal}
+        appointment={appointment}
+        onClose={() => setShowReassignModal(false)}
+        onSuccess={() => {
+          loadData();
+        }}
+      />
     </div>
   );
 };

@@ -23,7 +23,6 @@ export default function ReceptionistCheckInAndCashierPage() {
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [selectedAptForModal, setSelectedAptForModal] = useState(null);
   const [savingProfile, setSavingProfile] = useState(false);
-  const [initialReassignMode, setInitialReassignMode] = useState(false);
   const [patientForm, setPatientForm] = useState({
     fullName: '',
     phone: '',
@@ -73,9 +72,8 @@ export default function ReceptionistCheckInAndCashierPage() {
     }
   };
 
-  const openPatientModal = async (apt, reassign = false) => {
+  const openPatientModal = async (apt) => {
     setSelectedAptForModal(apt);
-    setInitialReassignMode(Boolean(reassign));
     const p = apt.patientProfile || {};
     
     const initialForm = {
@@ -365,7 +363,6 @@ export default function ReceptionistCheckInAndCashierPage() {
         onClose={() => setShowPatientModal(false)}
         onSaveProfileOnly={handleSavePatientProfileOnly}
         onSaveProfileAndCheckIn={handleSaveProfileAndCheckIn}
-        initialReassignMode={initialReassignMode}
       />
     </div>
   );
