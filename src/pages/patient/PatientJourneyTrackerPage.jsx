@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { outpatientService } from '../../services/outpatientService';
 import { 
   CheckCircle, Clock, AlertCircle, FileText, Activity, 
-  CreditCard, Pill, ArrowLeft, RefreshCw, User, ShieldCheck, ChevronRight, Sparkles
+  CreditCard, Pill, ArrowLeft, RefreshCw, User, ShieldCheck, ChevronRight, Sparkles,
+  Image as ImageIcon, ZoomIn, X
 } from 'lucide-react';
 
 export default function PatientJourneyTrackerPage() {
@@ -13,6 +14,7 @@ export default function PatientJourneyTrackerPage() {
   const [visit, setVisit] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('timeline');
+  const [selectedImageModal, setSelectedImageModal] = useState(null);
 
   useEffect(() => {
     fetchVisitData();
@@ -340,36 +342,83 @@ export default function PatientJourneyTrackerPage() {
               <Activity className="w-5 h-5 text-sky-600" /> Trả Kết Quả Cận Lâm Sàng
             </h2>
 
-            {visit.clinicalOrders && visit.clinicalOrders.flatMap(o => o.serviceRequests).filter(sr => sr.result).map(sr => (
-              <div key={sr.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-6 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-base">{sr.serviceName}</h3>
-                    <span className="text-xs text-slate-500">Loại: {sr.serviceType}</span>
-                  </div>
-                  <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-full">
-                    STATUS: FINAL
-                  </span>
-                </div>
+            {visit.clinicalOrders && visit.clinicalOrders.flatMap(o => o.serviceRequests).filter(sr => sr.result).map(sr => {
+              let parsedData = null;
+              if (sr.result.resultData) {
+                try {
+                  parsedData = typeof sr.result.resultData === 'string' ? JSON.parse(sr.result.resultData) : sr.result.resultData;
+                } catch (e) {}
+              }
+              const hasImages = parsedData && Array.isArray(parsedData.imageUrls) && parsedData.imageUrls.length > 0;
 
-                <div className="space-y-3 text-xs">
-                  {sr.result.findings && (
+              return (
+                <div key={sr.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-6 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                     <div>
-                      <div className="text-[10px] text-slate-500 font-bold uppercase mb-1">Mô tả / Thao tác kỹ thuật:</div>
-                      <div className="bg-white p-3 rounded-xl text-slate-800 font-mono border border-slate-200 shadow-xs">{sr.result.findings}</div>
+                      <h3 className="font-bold text-slate-900 text-base">{sr.serviceName}</h3>
+                      <span className="text-xs text-slate-500">Loại: {sr.serviceType}</span>
                     </div>
-                  )}
-                  {sr.result.conclusion && (
-                    <div>
-                      <div className="text-[10px] text-slate-500 font-bold uppercase mb-1">Kết luận:</div>
-                      <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-emerald-900 font-bold">
-                        {sr.result.conclusion}
+                    <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-full">
+                      STATUS: FINAL
+                    </span>
+                  </div>
+
+                  {/* Diagnostic Images Gallery */}
+                  {hasImages && (
+                    <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 space-y-2.5">
+                      <div className="text-xs font-bold text-indigo-950 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <ImageIcon className="w-4 h-4 text-indigo-600" />
+                          Hình Ảnh Chụp / Siêu Âm Đính Kèm ({parsedData.imageUrls.length} ảnh)
+                        </span>
+                        <span className="text-[10px] text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded font-semibold">
+                          Nhấn vào ảnh để xem to
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        {parsedData.imageUrls.map((url, imgIdx) => (
+                          <div
+                            key={imgIdx}
+                            onClick={() => setSelectedImageModal({ url, index: imgIdx + 1, total: parsedData.imageUrls.length })}
+                            className="group relative aspect-4/3 rounded-xl overflow-hidden bg-slate-900 cursor-pointer border border-slate-200 hover:border-indigo-500 shadow-xs transition"
+                          >
+                            <img
+                              src={url}
+                              alt={`Ảnh chẩn đoán ${imgIdx + 1}`}
+                              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold gap-1">
+                              <ZoomIn className="w-4 h-4" />
+                              <span>Xem</span>
+                            </div>
+                            <span className="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] font-mono px-1 rounded">
+                              #{imgIdx + 1}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
+
+                  <div className="space-y-3 text-xs">
+                    {sr.result.findings && (
+                      <div>
+                        <div className="text-[10px] text-slate-500 font-bold uppercase mb-1">Mô tả / Thao tác kỹ thuật:</div>
+                        <div className="bg-white p-3 rounded-xl text-slate-800 font-mono border border-slate-200 shadow-xs">{sr.result.findings}</div>
+                      </div>
+                    )}
+                    {sr.result.conclusion && (
+                      <div>
+                        <div className="text-[10px] text-slate-500 font-bold uppercase mb-1">Kết luận:</div>
+                        <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-emerald-900 font-bold">
+                          {sr.result.conclusion}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -420,6 +469,40 @@ export default function PatientJourneyTrackerPage() {
         )}
 
       </div>
+
+      {/* Diagnostic Image Zoom Modal for Patient */}
+      {selectedImageModal && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 transition-all"
+          onClick={() => setSelectedImageModal(null)}
+        >
+          <div 
+            className="relative max-w-4xl max-h-[90vh] bg-slate-900 text-white rounded-2xl overflow-hidden shadow-2xl border border-slate-700 flex flex-col w-full"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-3.5 bg-slate-800 flex items-center justify-between border-b border-slate-700">
+              <div className="flex items-center gap-2 text-sm font-bold">
+                <ImageIcon className="w-4 h-4 text-sky-400" />
+                <span>Xem Hình Ảnh Chụp/Siêu Âm #{selectedImageModal.index}/{selectedImageModal.total}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedImageModal(null)}
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 bg-black/95 flex items-center justify-center overflow-auto max-h-[75vh]">
+              <img
+                src={selectedImageModal.url}
+                alt="Chi tiết chẩn đoán hình ảnh"
+                className="max-h-[70vh] w-auto object-contain rounded-lg shadow-lg"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -40,13 +40,13 @@ export default function TechnicianTaskQueuePage() {
     alt: 28          // Ref: < 40 U/L
   });
 
-  // Structured Form States: Chẩn Đoán Hình Ảnh (Siêu Âm B202, CT Scanner B202...)
   const [imaging, setImaging] = useState({
     serviceType: 'ULTRASOUND',
     organ: 'Ổ bụng tổng quát',
     findingStatus: 'Bình thường',
     observation: 'Gan, mật, tụy, lách, hai thận kích thước và cấu trúc nhu mô bình thường. Không thấy dịch tự do ổ bụng.',
-    recommendation: 'Không phát hiện bất thường trên hình ảnh chẩn đoán.'
+    recommendation: 'Không phát hiện bất thường trên hình ảnh chẩn đoán.',
+    imageUrls: []
   });
 
   // Base Form Fields
@@ -79,7 +79,7 @@ export default function TechnicianTaskQueuePage() {
       } else {
         setTemplateType('IMAGING');
         const imgType = name.includes('CT') || code.includes('CT') ? 'CT_SCAN' : 'ULTRASOUND';
-        const nextImg = { ...imaging, serviceType: imgType };
+        const nextImg = { ...imaging, serviceType: imgType, imageUrls: [] };
         setImaging(nextImg);
         buildImagingPayload(nextImg);
       }
@@ -187,7 +187,8 @@ export default function TechnicianTaskQueuePage() {
       organ: newImg.organ || 'Ổ bụng tổng quát',
       findingStatus: newImg.findingStatus || 'Bình thường',
       observation: newImg.observation || '',
-      recommendation: newImg.recommendation || ''
+      recommendation: newImg.recommendation || '',
+      imageUrls: newImg.imageUrls || []
     };
 
     setResultData(JSON.stringify(payloadObj, null, 2));

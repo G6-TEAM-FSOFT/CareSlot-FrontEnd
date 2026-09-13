@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { outpatientService } from '../../services/outpatientService';
 import { patientService } from '../../services/patientService';
 import { 
-  Stethoscope, CheckCircle2, RefreshCw, Sparkles, PlayCircle 
+  Stethoscope, CheckCircle2, RefreshCw, Sparkles, PlayCircle, Image as ImageIcon, ZoomIn, X 
 } from 'lucide-react';
 
 import DoctorQueueList from '../../components/doctor/DoctorQueueList';
@@ -34,6 +34,7 @@ export default function DoctorConsultationWorkspace() {
   const [patientProfileDetail, setPatientProfileDetail] = useState(null);
   const [patientHistoryList, setPatientHistoryList] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [selectedImageModal, setSelectedImageModal] = useState(null);
 
   // Vital signs form state (Assistant / Doctor joint input)
   const [systolicBp, setSystolicBp] = useState('120');
@@ -352,9 +353,53 @@ export default function DoctorConsultationWorkspace() {
     }
 
     const hasParams = parsedData && Array.isArray(parsedData.parameters) && parsedData.parameters.length > 0;
+    const hasImages = parsedData && Array.isArray(parsedData.imageUrls) && parsedData.imageUrls.length > 0;
 
     return (
-      <div className="space-y-2 mt-2">
+      <div className="space-y-2.5 mt-2">
+        {/* Diagnostic Images Gallery (Ultrasound / X-Ray / CT) */}
+        {hasImages && (
+          <div className="bg-indigo-50/40 rounded-xl border border-indigo-100 p-3.5 space-y-2.5 shadow-xs">
+            <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+              <span className="flex items-center gap-1.5 text-indigo-950">
+                <ImageIcon className="w-4 h-4 text-indigo-600" />
+                HÌNH ẢNH CHẨN ĐOÁN (SIÊU ÂM / X-QUANG / CT) ({parsedData.imageUrls.length} ảnh)
+              </span>
+              <span className="text-[10px] text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded font-semibold">
+                Click ảnh để phóng to
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+              {parsedData.imageUrls.map((url, imgIdx) => (
+                <div
+                  key={imgIdx}
+                  onClick={() => setSelectedImageModal({ 
+                    url, 
+                    title: result.findings || 'Ảnh kết quả chẩn đoán hình ảnh', 
+                    index: imgIdx + 1, 
+                    total: parsedData.imageUrls.length 
+                  })}
+                  className="group relative aspect-4/3 rounded-xl overflow-hidden bg-slate-900 cursor-pointer border border-slate-200 hover:border-indigo-500 shadow-xs hover:shadow-md transition"
+                >
+                  <img
+                    src={url}
+                    alt={`Ảnh chẩn đoán ${imgIdx + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1.5 text-white text-xs font-bold">
+                    <ZoomIn className="w-4 h-4 text-white" />
+                    <span>Xem rõ</span>
+                  </div>
+                  <span className="absolute bottom-1.5 right-1.5 bg-black/70 text-white text-[10px] font-mono px-1.5 py-0.5 rounded font-bold">
+                    #{imgIdx + 1}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Structured Parameter Table for CBC & Bio */}
         {hasParams ? (
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm text-xs">
@@ -620,6 +665,45 @@ export default function DoctorConsultationWorkspace() {
         loadingHistory={loadingHistory}
         onClose={() => setShowMedicalHistoryModal(false)}
       />
+
+      {/* Diagnostic Image Zoom Lightbox Modal for Doctor */}
+      {selectedImageModal && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 transition-all"
+          onClick={() => setSelectedImageModal(null)}
+        >
+          <div 
+            className="relative max-w-5xl max-h-[90vh] bg-slate-900 text-white rounded-2xl overflow-hidden shadow-2xl border border-slate-700 flex flex-col w-full"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-3.5 bg-slate-800 flex items-center justify-between border-b border-slate-700">
+              <div className="flex items-center gap-2 text-sm font-bold">
+                <ImageIcon className="w-4 h-4 text-indigo-400" />
+                <span>Chi Tiết Hình Ảnh Siêu Âm / X-Quang #{selectedImageModal.index}/{selectedImageModal.total}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedImageModal(null)}
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 bg-black/95 flex items-center justify-center overflow-auto max-h-[75vh]">
+              <img
+                src={selectedImageModal.url}
+                alt="Chi tiết chẩn đoán"
+                className="max-h-[70vh] w-auto object-contain rounded-lg shadow-lg"
+              />
+            </div>
+            {selectedImageModal.title && (
+              <div className="p-3 bg-slate-800 text-xs text-slate-300 border-t border-slate-700 font-mono">
+                {selectedImageModal.title}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
