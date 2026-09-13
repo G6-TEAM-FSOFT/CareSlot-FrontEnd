@@ -38,7 +38,10 @@ export const LoginPage = () => {
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError(err?.message || err?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra Email và Mật khẩu.');
+      const errorMessage = typeof err === 'string' 
+        ? err 
+        : (err?.message || err?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra Email và Mật khẩu.');
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }
