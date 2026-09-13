@@ -10,34 +10,13 @@ const INITIAL_MOCK_PROFILE = {
 };
 
 export const patientService = {
-  // Primary Profile APIs (T-023)
+  // Primary Profile APIs
   getPrimaryProfile: async () => {
-    try {
-      return await api.get('/patients/me/primary');
-    } catch (error) {
-      console.warn('API backend chưa kết nối hoặc chưa xác thực, sử dụng mock data để test UI:', error);
-      const saved = localStorage.getItem(MOCK_PRIMARY_PROFILE_KEY);
-      if (saved) {
-        try {
-          return { data: JSON.parse(saved) };
-        } catch {
-          // ignore parse error
-        }
-      }
-      return { data: INITIAL_MOCK_PROFILE };
-    }
+    return await api.get('/patients/me/primary');
   },
 
   updatePrimaryProfile: async (profileData) => {
-    try {
-      return await api.put('/patients/me/primary', profileData);
-    } catch (error) {
-      console.warn('API backend chưa kết nối hoặc chưa xác thực, lưu vào mock data local:', error);
-      localStorage.setItem(MOCK_PRIMARY_PROFILE_KEY, JSON.stringify(profileData));
-      // Simulate network delay for realistic UI test
-      await new Promise((resolve) => setTimeout(resolve, 400));
-      return { data: profileData };
-    }
+    return await api.put('/patients/me/primary', profileData);
   },
 
   // Patient / Relative Profiles APIs
@@ -47,21 +26,7 @@ export const patientService = {
   },
 
   getPatientById: async (id) => {
-    try {
-      return await api.get(`/patients/${id}`);
-    } catch (error) {
-      console.warn('API backend error, using local fallback for patient profile:', error);
-      const key = `care_slot_patient_profile_${id}`;
-      const saved = localStorage.getItem(key);
-      if (saved) {
-        try {
-          return { data: JSON.parse(saved) };
-        } catch (e) {
-          // ignore
-        }
-      }
-      return { data: null };
-    }
+    return await api.get(`/patients/${id}`);
   },
 
   createPatient: async (patientData) => {
@@ -82,15 +47,7 @@ export const patientService = {
       address: patientData.address && patientData.address.trim() !== '' ? patientData.address.trim() : null,
       relationship: patientData.relationship && patientData.relationship.trim() !== '' ? patientData.relationship.trim() : null,
     };
-    try {
-      return await api.put(`/patients/${id}`, payload);
-    } catch (error) {
-      console.warn('API backend error, saving patient profile to local storage fallback:', error);
-      const key = `care_slot_patient_profile_${id}`;
-      localStorage.setItem(key, JSON.stringify({ id, ...payload }));
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      return { data: { id, ...payload } };
-    }
+    return await api.put(`/patients/${id}`, payload);
   },
 
   deletePatient: async (id) => {

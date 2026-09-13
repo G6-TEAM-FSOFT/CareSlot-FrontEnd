@@ -6,6 +6,7 @@ import {
   CreditCard, Pill, ArrowLeft, RefreshCw, User, ShieldCheck, ChevronRight, Sparkles,
   Image as ImageIcon, ZoomIn, X
 } from 'lucide-react';
+import { parseClinicalNote } from '../../utils/formatters';
 
 export default function PatientJourneyTrackerPage() {
   const { visitId, appointmentId } = useParams();
@@ -327,8 +328,8 @@ export default function PatientJourneyTrackerPage() {
                   <span>Người nhập: <span className="text-slate-900 font-semibold">{n.enteredByName}</span></span>
                   <span>Bác sĩ chuyên môn: <span className="text-emerald-700 font-semibold">{n.clinicalAuthorName}</span></span>
                 </div>
-                <div className="bg-white p-4 rounded-xl text-xs text-slate-800 font-mono whitespace-pre-wrap border border-slate-200 shadow-xs">
-                  {n.formData}
+                <div className="bg-white p-4 rounded-xl text-xs text-slate-800 font-medium whitespace-pre-wrap border border-slate-200 shadow-xs">
+                  {parseClinicalNote(n.formData)}
                 </div>
               </div>
             ))}

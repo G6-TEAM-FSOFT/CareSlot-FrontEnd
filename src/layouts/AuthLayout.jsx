@@ -9,7 +9,7 @@ export const AuthLayout = () => {
         <Stethoscope className="w-8 h-8 text-indigo-600" />
         <span>Care<span className="text-emerald-500">Slot</span></span>
       </div>
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-slate-100">
         <Outlet />
       </div>
     </div>

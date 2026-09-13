@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ClipboardList, Search, RefreshCw, AlertCircle, Eye, Calendar, User, Stethoscope, Clock, CheckCircle2 } from 'lucide-react';
+import { ClipboardList, Search, RefreshCw, AlertCircle, Eye, Calendar, User, Stethoscope, Clock, CheckCircle2, Shuffle } from 'lucide-react';
 import { partnerAppointmentService } from '../../services/clinic_partner/partnerAppointmentService';
 import { DEFAULT_DEPOSIT_AMOUNT } from '../../config/constants';
+import ReassignDoctorModal from '../../components/clinic_partner/ReassignDoctorModal';
 
 export const AppointmentListPage = () => {
   const [appointments, setAppointments] = useState([]);
@@ -11,6 +12,8 @@ export const AppointmentListPage = () => {
 
   const [selectedStatus, setSelectedStatus] = useState('');
   const [keyword, setKeyword] = useState('');
+  const [showReassignModal, setShowReassignModal] = useState(false);
+  const [reassignApt, setReassignApt] = useState(null);
 
   const loadAppointments = async () => {
     try {
@@ -232,14 +235,27 @@ export const AppointmentListPage = () => {
                     <td className="px-6 py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
                         {apt.status === 'CONFIRMED' && (
-                          <button
-                            onClick={() => handleCheckIn(apt.id)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition cursor-pointer"
-                            title="Bệnh nhân đã có mặt làm thủ tục khám"
-                          >
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            <span>Check-in</span>
-                          </button>
+                          <>
+                            <button
+                              onClick={() => {
+                                setReassignApt(apt);
+                                setShowReassignModal(true);
+                              }}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-xl border border-indigo-200 transition cursor-pointer"
+                              title="Điều phối lại Bác sĩ / Phòng khám"
+                            >
+                              <Shuffle className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>Đổi Bác sĩ</span>
+                            </button>
+                            <button
+                              onClick={() => handleCheckIn(apt.id)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition cursor-pointer"
+                              title="Bệnh nhân đã có mặt làm thủ tục khám"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Check-in</span>
+                            </button>
+                          </>
                         )}
                         <Link
                           to={`/clinic-partner/appointments/${apt.id}`}
@@ -257,6 +273,19 @@ export const AppointmentListPage = () => {
           </div>
         </div>
       )}
+
+      {/* Modal Reassign Doctor */}
+      <ReassignDoctorModal
+        show={showReassignModal}
+        appointment={reassignApt}
+        onClose={() => {
+          setShowReassignModal(false);
+          setReassignApt(null);
+        }}
+        onSuccess={() => {
+          loadAppointments();
+        }}
+      />
     </div>
   );
 };

@@ -61,27 +61,14 @@ export default function DoctorConsultationWorkspace() {
 
   const openPatientProfileModal = async () => {
     const profileId = visit?.patientProfileId || selectedEncounter?.patientProfileId;
-    const initialObj = {
-      fullName: visit?.patientName || selectedEncounter?.patientName || 'Bệnh nhân',
-      phone: visit?.patientPhone || selectedEncounter?.patientPhone || '',
-      dateOfBirth: visit?.patientDob || selectedEncounter?.patientDob || '1995-06-15',
-      gender: visit?.patientGender || selectedEncounter?.patientGender || 'MALE',
-      identityCard: '001095012345',
-      cardIssueDate: '2021-05-10',
-      ethnicity: 'Kinh',
-      nationality: 'Việt Nam',
-      occupation: 'Kỹ sư CNTT',
-      address: 'Phố Chùa Bộc, Đống Đa, Hà Nội',
-      relationship: 'Bản thân'
-    };
-    setPatientProfileDetail(initialObj);
+    setPatientProfileDetail(null);
     setShowPatientProfileModal(true);
 
     if (profileId) {
       try {
         const res = await patientService.getPatientById(profileId);
         if (res && res.data) {
-          setPatientProfileDetail(prev => ({ ...prev, ...res.data }));
+          setPatientProfileDetail(res.data);
         }
       } catch (err) {
         console.warn('Không thể nạp chi tiết profile:', err);

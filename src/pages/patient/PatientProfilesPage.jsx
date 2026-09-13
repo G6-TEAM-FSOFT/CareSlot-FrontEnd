@@ -131,7 +131,7 @@ export const PatientProfilesPage = () => {
     fetchPatients();
   }, []);
 
-  const fetchPatients = async () => {
+  const fetchPatients = async (targetId = null) => {
     setLoading(true);
     try {
       const res = await patientService.getPatients();
@@ -140,7 +140,12 @@ export const PatientProfilesPage = () => {
       
       setPatients(list);
       if (list.length > 0) {
-        setSelectedPatient(list[0]);
+        if (targetId) {
+          const found = list.find((p) => p.id === targetId);
+          setSelectedPatient(found || list[0]);
+        } else {
+          setSelectedPatient((prev) => (prev ? list.find((p) => p.id === prev.id) || list[0] : list[0]));
+        }
       } else {
         setSelectedPatient(null);
       }
@@ -246,26 +251,22 @@ export const PatientProfilesPage = () => {
 
     try {
       if (editingPatient) {
-        await patientService.updatePatient(editingPatient.id, formData);
+        const res = await patientService.updatePatient(editingPatient.id, formData);
+        const updatedData = res?.data || res;
         setSuccessMsg('Cập nhật hồ sơ bệnh nhân thành công!');
+        setIsModalOpen(false);
+        await fetchPatients(editingPatient.id);
       } else {
-        await patientService.createPatient(formData);
+        const res = await patientService.createPatient(formData);
+        const createdData = res?.data || res;
         setSuccessMsg('Tạo mới hồ sơ bệnh nhân thành công!');
+        setIsModalOpen(false);
+        await fetchPatients(createdData?.id);
       }
-      setIsModalOpen(false);
-      fetchPatients();
     } catch (err) {
-      console.error('Error saving patient:', err);
-      // Fallback local update if API stub
-      if (editingPatient) {
-        setPatients(patients.map(p => p.id === editingPatient.id ? { ...p, ...formData } : p));
-        setSelectedPatient({ ...editingPatient, ...formData });
-      } else {
-        const newP = { id: Date.now(), ...formData };
-        setPatients([...patients, newP]);
-        setSelectedPatient(newP);
-      }
-      setIsModalOpen(false);
+      console.error('Error saving patient profile:', err);
+      const msg = err?.response?.data?.message || err?.data?.message || err?.message || 'Lỗi cập nhật hồ sơ bệnh nhân từ máy chủ.';
+      setErrorMsg(msg);
     } finally {
       setSubmitting(false);
     }
@@ -276,12 +277,11 @@ export const PatientProfilesPage = () => {
     try {
       await patientService.deletePatient(id);
       setSuccessMsg('Đã xóa hồ sơ bệnh nhân!');
-      fetchPatients();
+      await fetchPatients();
     } catch (err) {
       console.error('Error deleting patient:', err);
-      const remaining = patients.filter(p => p.id !== id);
-      setPatients(remaining);
-      if (remaining.length > 0) setSelectedPatient(remaining[0]);
+      const msg = err?.response?.data?.message || err?.data?.message || err?.message || 'Không thể xóa hồ sơ bệnh nhân.';
+      alert(msg);
     }
   };
 

@@ -49,4 +49,28 @@ export const formatTime = (timeString) => {
   }).format(date);
 };
 
+export const parseClinicalNote = (formData) => {
+  if (!formData) return '';
+  if (typeof formData !== 'string') {
+    if (typeof formData === 'object' && formData !== null) {
+      return formData.note || formData.clinicalNote || formData.text || JSON.stringify(formData);
+    }
+    return String(formData);
+  }
+  const trimmed = formData.trim();
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (parsed && typeof parsed === 'object') {
+        if (parsed.note !== undefined && parsed.note !== null) return parsed.note;
+        if (parsed.clinicalNote !== undefined && parsed.clinicalNote !== null) return parsed.clinicalNote;
+        if (parsed.text !== undefined && parsed.text !== null) return parsed.text;
+      }
+    } catch (e) {
+      // Return original string if JSON parsing fails
+    }
+  }
+  return formData;
+};
+
 

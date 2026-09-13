@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
 import { ROLES } from '../../config/constants';
-import { Hospital, UserCheck, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Hospital, UserCheck, ShieldCheck, AlertCircle, Building2 } from 'lucide-react';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -20,19 +20,18 @@ export const LoginPage = () => {
     setSubmitting(true);
 
     try {
-      const response = await authService.login({ email, password });
-      const authData = response.data;
-      login(authData, authData.token);
+      const response = await login({ email, password });
+      const authData = response?.data || response;
 
-      if (authData.role === ROLES.RECEPTIONIST) {
+      if (authData?.role === ROLES.RECEPTIONIST) {
         navigate('/outpatient/receptionist');
-      } else if (authData.role === ROLES.CLINICAL_ASSISTANT || authData.role === ROLES.DOCTOR) {
+      } else if (authData?.role === ROLES.CLINICAL_ASSISTANT || authData?.role === ROLES.DOCTOR) {
         navigate('/outpatient/doctor');
-      } else if (authData.role === ROLES.TECHNICIAN) {
+      } else if (authData?.role === ROLES.TECHNICIAN) {
         navigate('/outpatient/technician');
-      } else if (authData.role === ROLES.CLINIC_PARTNER || authData.role === ROLES.CLINIC_STAFF || authData.role === ROLES.CLINIC_ADMIN) {
+      } else if (authData?.role === ROLES.CLINIC_PARTNER || authData?.role === ROLES.CLINIC_STAFF || authData?.role === ROLES.CLINIC_ADMIN) {
         navigate('/clinic-partner/profile');
-      } else if (authData.role === ROLES.ADMIN) {
+      } else if (authData?.role === ROLES.ADMIN) {
         navigate('/admin/dashboard');
       } else {
         navigate('/');
@@ -103,11 +102,28 @@ export const LoginPage = () => {
           </button>
           <button
             type="button"
+            onClick={() => fillAccount('staff1@careslot.vn', '123456')}
+            className="px-2 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-indigo-500 hover:text-indigo-600 text-left transition flex items-center gap-1.5"
+            title="Nhân viên Clinic Partner (staff1@careslot.vn)"
+          >
+            <Building2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <span className="truncate">Clinic Staff (Đối tác)</span>
+          </button>
+          <button
+            type="button"
             onClick={() => fillAccount('admin@careslot.vn', '123456')}
             className="px-2 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-slate-800 hover:text-slate-900 text-left transition flex items-center gap-1.5"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-slate-800 shrink-0" />
             <span className="truncate">System Admin</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => fillAccount('staff1@careslot.vn', '123456')}
+            className="px-2 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-slate-800 hover:text-slate-900 text-left transition flex items-center gap-1.5"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-slate-800 shrink-0" />
+            <span className="truncate">Clinic Staff</span>
           </button>
         </div>
       </div>

@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { outpatientService } from '../../services/outpatientService';
-import { 
-  CheckCircle2, FileText, Send, FlaskConical, RefreshCw, Sparkles, User, Stethoscope
+import {
+  CheckCircle2, FileText, Send, FlaskConical, RefreshCw, Sparkles, User, Stethoscope, Clock
 } from 'lucide-react';
 
 import TechnicianTaskQueueList from '../../components/technician/TechnicianTaskQueueList';
 import CbcFormTemplate from '../../components/technician/CbcFormTemplate';
 import BioFormTemplate from '../../components/technician/BioFormTemplate';
 import ImagingFormTemplate from '../../components/technician/ImagingFormTemplate';
+import PdfPrintButton from '../../components/PdfPrintButton';
 
 export default function TechnicianTaskQueuePage() {
   const [rooms, setRooms] = useState([]);
   const [selectedRoomId, setSelectedRoomId] = useState(2); // Room A101 Lab collection
+  const [activeTab, setActiveTab] = useState('WAITING'); // 'WAITING' | 'COMPLETED'
   const [tasks, setTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -62,26 +64,74 @@ export default function TechnicianTaskQueuePage() {
     if (selectedRoomId) {
       fetchTasks();
     }
-  }, [selectedRoomId]);
+  }, [selectedRoomId, activeTab]);
 
-  // Auto-detect template when task changes
+  // Auto-detect template & populate values when task changes
   useEffect(() => {
     if (selectedTask) {
       const code = (selectedTask.serviceCode || '').toUpperCase();
       const name = (selectedTask.serviceName || '').toUpperCase();
 
+      let detectedTemplate = 'IMAGING';
       if (code.includes('CBC') || code.includes('MAU') || name.includes('MÁU') || name.includes('HUYẾT HỌC') || name.includes('CBC')) {
-        setTemplateType('CBC');
-        buildCbcPayload(cbc);
+        detectedTemplate = 'CBC';
       } else if (code.includes('BIO') || code.includes('SHM') || name.includes('SINH HÓA') || name.includes('GLUCOSE')) {
-        setTemplateType('BIO');
-        buildBioPayload(bio);
+        detectedTemplate = 'BIO';
+      }
+      setTemplateType(detectedTemplate);
+
+      // Populate existing result if task is completed or has result
+      if (selectedTask.result) {
+        setFindings(selectedTask.result.findings || '');
+        setConclusion(selectedTask.result.conclusion || '');
+
+        if (selectedTask.result.resultData) {
+          setResultData(selectedTask.result.resultData);
+          try {
+            const data = typeof selectedTask.result.resultData === 'string'
+              ? JSON.parse(selectedTask.result.resultData)
+              : selectedTask.result.resultData;
+
+            if (detectedTemplate === 'CBC' && data.parameters) {
+              const updatedCbc = { ...cbc };
+              data.parameters.forEach(p => {
+                const k = (p.code || '').toLowerCase();
+                if (k in updatedCbc) updatedCbc[k] = p.value;
+              });
+              setCbc(updatedCbc);
+            } else if (detectedTemplate === 'BIO' && data.parameters) {
+              const updatedBio = { ...bio };
+              data.parameters.forEach(p => {
+                const k = (p.code || '').toLowerCase();
+                if (k in updatedBio) updatedBio[k] = p.value;
+              });
+              setBio(updatedBio);
+            } else if (detectedTemplate === 'IMAGING') {
+              setImaging({
+                serviceType: data.serviceType || 'ULTRASOUND',
+                organ: data.organ || 'Ổ bụng tổng quát',
+                findingStatus: data.findingStatus || 'Bình thường',
+                observation: data.observation || '',
+                recommendation: data.recommendation || ''
+              });
+            }
+          } catch (e) {
+            console.error("Lỗi parse JSON resultData:", e);
+          }
+        }
       } else {
-        setTemplateType('IMAGING');
-        const imgType = name.includes('CT') || code.includes('CT') ? 'CT_SCAN' : 'ULTRASOUND';
-        const nextImg = { ...imaging, serviceType: imgType, imageUrls: [] };
-        setImaging(nextImg);
-        buildImagingPayload(nextImg);
+        // Initialize default payloads for new ready tasks
+    if (detectedTemplate === 'CBC') {
+      buildCbcPayload(cbc);
+    } else if (detectedTemplate === 'BIO') {
+      buildBioPayload(bio);
+    } else {
+      setTemplateType('IMAGING');
+      const imgType = name.includes('CT') || code.includes('CT') ? 'CT_SCAN' : 'ULTRASOUND';
+      const nextImg = { ...imaging, serviceType: imgType, imageUrls: [] };
+      setImaging(nextImg);
+      buildImagingPayload(nextImg);
+    }
       }
     }
   }, [selectedTask]);
@@ -102,11 +152,14 @@ export default function TechnicianTaskQueuePage() {
   const fetchTasks = async () => {
     setFetchingTasks(true);
     try {
-      const res = await outpatientService.getTaskQueueByRoom(selectedRoomId, 'READY');
+      const statusParam = activeTab === 'WAITING' ? 'READY' : 'COMPLETED';
+      const res = await outpatientService.getTaskQueueByRoom(selectedRoomId, statusParam);
       if (res && res.data) {
         setTasks(res.data);
         if (res.data.length > 0 && (!selectedTask || !res.data.some(t => t.id === selectedTask.id))) {
           setSelectedTask(res.data[0]);
+        } else if (res.data.length === 0) {
+          setSelectedTask(null);
         }
       }
     } catch (err) {
@@ -229,11 +282,10 @@ export default function TechnicianTaskQueuePage() {
       });
 
       if (res && res.data) {
-        setMessage({ 
-          type: 'success', 
-          text: `Đã trả & FINAL thành công kết quả cho dịch vụ "${selectedTask.serviceName}"! Hệ thống đã ghi nhận đầy đủ các thông số chi tiết vào cơ sở dữ liệu.` 
+        setMessage({
+          type: 'success',
+          text: `Đã trả & FINAL thành công kết quả cho dịch vụ "${selectedTask.serviceName}"! Hệ thống đã cập nhật kết quả vào cơ sở dữ liệu.`
         });
-        setSelectedTask(null);
         fetchTasks();
       }
     } catch (err) {
@@ -244,10 +296,12 @@ export default function TechnicianTaskQueuePage() {
     }
   };
 
+  const isTaskCompleted = activeTab === 'COMPLETED' || selectedTask?.status === 'COMPLETED' || selectedTask?.task?.status === 'COMPLETED';
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        
+
         {/* Banner Title Header */}
         <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-md">
           <div className="flex flex-wrap items-center justify-between gap-4 relative z-10">
@@ -260,7 +314,7 @@ export default function TechnicianTaskQueuePage() {
                 Technician Detailed Diagnostic Workspace
               </h1>
               <p className="text-xs md:text-sm text-amber-100 mt-1 max-w-2xl">
-                Nhập đầy đủ các thông số chỉ số xét nghiệm (CBC Công thức máu, Sinh hóa, Siêu âm...), hiển thị cảnh báo chỉ số Tăng/Giảm tự động và lưu lưu trữ JSON vào Database.
+                Nhập đầy đủ các thông số chỉ số xét nghiệm (CBC Công thức máu, Sinh hóa, Siêu âm...), hiển thị cảnh báo chỉ số Tăng/Giảm tự động và xem lại lịch sử dịch vụ hoàn tất.
               </p>
             </div>
 
@@ -271,7 +325,7 @@ export default function TechnicianTaskQueuePage() {
                 className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl border border-white/20 backdrop-blur-md transition-all flex items-center gap-2"
               >
                 <RefreshCw className={`w-4 h-4 text-amber-200 ${fetchingTasks ? 'animate-spin' : ''}`} />
-                Làm mới hàng chờ
+                Làm mới danh sách
               </button>
             </div>
           </div>
@@ -285,11 +339,10 @@ export default function TechnicianTaskQueuePage() {
               <button
                 key={room.id}
                 onClick={() => { setSelectedRoomId(room.id); setSelectedTask(null); }}
-                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 ${
-                  selectedRoomId === room.id
-                    ? 'bg-amber-500 text-white shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
+                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 ${selectedRoomId === room.id
+                  ? 'bg-amber-500 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
               >
                 <FlaskConical className="w-3.5 h-3.5" />
                 Phòng {room.roomNumber} - {room.name}
@@ -300,11 +353,10 @@ export default function TechnicianTaskQueuePage() {
 
         {/* Feedback Alert Toast */}
         {message && (
-          <div className={`p-4 rounded-2xl border flex items-center justify-between gap-3 text-sm font-medium transition-all ${
-            message.type === 'success' 
-              ? 'bg-emerald-50 border-emerald-300 text-emerald-800' 
-              : 'bg-rose-50 border-rose-300 text-rose-800'
-          }`}>
+          <div className={`p-4 rounded-2xl border flex items-center justify-between gap-3 text-sm font-medium transition-all ${message.type === 'success'
+            ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+            : 'bg-rose-50 border-rose-300 text-rose-800'
+            }`}>
             <div className="flex items-center gap-3">
               <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600" />
               <span>{message.text}</span>
@@ -314,26 +366,72 @@ export default function TechnicianTaskQueuePage() {
         )}
 
         <div className="grid lg:grid-cols-12 gap-6">
-          
-          {/* Left Column: Task Queue List Component (4 cols) */}
+
+          {/* Left Column: Task Queue List Component with Dual Tabs (4 cols) */}
           <TechnicianTaskQueueList
             tasks={tasks}
             fetchingTasks={fetchingTasks}
             selectedTask={selectedTask}
             setSelectedTask={setSelectedTask}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
           />
 
           {/* Right Column: Detailed Result Entry Workspace (8 cols) */}
           <div className="lg:col-span-8 bg-white border border-slate-200 rounded-3xl p-6 space-y-6 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
               <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-amber-600" /> Bảng Nhập Thông Số Cận Lâm Sàng & Duyệt FINAL
+                <FileText className="w-5 h-5 text-amber-600" />
+                {isTaskCompleted ? 'Chi Tiết Kết Quả Dịch Vụ Đã Hoàn Tất' : 'Bảng Nhập Thông Số Cận Lâm Sàng & Duyệt FINAL'}
               </h2>
+
+              {/* PDF Print Button for Completed Task */}
+              {/* {isTaskCompleted && selectedTask && selectedTask.result && (
+                <PdfPrintButton
+                  type="serviceResult"
+                  patientId={selectedTask.patientProfileId || selectedTask.patientId}
+                  visitId={selectedTask.visitId}
+                  resultId={selectedTask.result?.id}
+                  label="In Kết Quả PDF"
+                  variant="emerald"
+                  size="sm"
+                />
+              )} */}
             </div>
 
             {selectedTask ? (
               <form onSubmit={handleSubmitResult} className="space-y-6">
-                
+
+                {/* Completed Task Status Banner */}
+                {isTaskCompleted && (
+                  <div className="bg-emerald-50 border border-emerald-300 p-4 rounded-2xl text-xs text-emerald-900 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                      <div>
+                        <strong className="font-bold text-sm block">Đã Hoàn Tất & Duyệt FINAL Kết Quả</strong>
+                        <span>
+                          Thực hiện bởi: <strong>{selectedTask.result?.enteredByName || 'Kỹ Thuật Viên'}</strong>
+                          {selectedTask.result?.finalizedAt && (
+                            <> • Thời gian: <strong>{new Date(selectedTask.result.finalizedAt).toLocaleString('vi-VN')}</strong></>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    {selectedTask.result?.id && (
+                      <PdfPrintButton
+                        type="serviceResult"
+                        patientId={selectedTask.patientProfileId || selectedTask.patientId}
+                        visitId={selectedTask.visitId}
+                        resultId={selectedTask.result?.id}
+                        label="Xem & In PDF"
+                        variant="emerald"
+                        size="sm"
+                      />
+                    )}
+                  </div>
+                )}
+
                 {/* Active Task Info Card */}
                 <div className="bg-gradient-to-br from-slate-50 via-amber-50/20 to-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
@@ -341,7 +439,7 @@ export default function TechnicianTaskQueuePage() {
                       <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Bệnh nhân thực hiện:</span>
                       <div className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
                         <User className="w-5 h-5 text-amber-600" />
-                        <span>{selectedTask.patientName || 'Nguyễn Minh Anh'}</span>
+                        <span>{selectedTask.patientName || 'Bệnh nhân'}</span>
                       </div>
                       <div className="text-xs text-slate-600 flex flex-wrap items-center gap-3">
                         {selectedTask.patientGender && <span>Giới tính: <strong>{selectedTask.patientGender === 'MALE' ? 'Nam' : 'Nữ'}</strong></span>}
@@ -440,20 +538,28 @@ export default function TechnicianTaskQueuePage() {
                   />
                 </div>
 
-                <button
+                {/* <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-600 hover:to-emerald-700 font-extrabold text-white text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-95"
+                  className={`w-full py-3.5 font-extrabold text-white text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-95 ${
+                    isTaskCompleted 
+                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700' 
+                      : 'bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-600 hover:to-emerald-700'
+                  }`}
                 >
                   <Send className="w-4 h-4" />
-                  XÁC NHẬN & BẤM FINAL KẾT QUẢ
-                </button>
+                  {isTaskCompleted ? 'CẬP NHẬT LẠI KẾT QUẢ FINAL' : 'XÁC NHẬN & BẤM FINAL KẾT QUẢ'}
+                </button> */}
 
               </form>
             ) : (
               <div className="text-center text-slate-500 py-20 text-xs space-y-2">
                 <FileText className="w-10 h-10 text-slate-400 mx-auto" />
-                <p className="font-semibold text-slate-600">Vui lòng chọn 1 task từ danh sách hàng chờ bên trái để nhập kết quả.</p>
+                <p className="font-semibold text-slate-600">
+                  {activeTab === 'WAITING'
+                    ? 'Vui lòng chọn 1 task từ hàng chờ bên trái để nhập kết quả.'
+                    : 'Vui lòng chọn 1 dịch vụ đã hoàn tất để xem lại kết quả.'}
+                </p>
               </div>
             )}
           </div>
