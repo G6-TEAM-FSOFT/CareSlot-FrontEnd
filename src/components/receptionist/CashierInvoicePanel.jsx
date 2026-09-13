@@ -58,10 +58,13 @@ export default function CashierInvoicePanel({
                   <PdfPrintButton
                     patientId={activeVisit.patientProfileId || activeVisit.patientProfile?.id}
                     visitId={activeVisit.id}
+                    prescriptionId={activeVisit.prescription?.id}
                     type="prescription"
                     label="In Đơn Thuốc"
                     variant="emerald"
                     size="sm"
+                    disabled={activeVisit.status !== 'COMPLETED'}
+                    disabledReason="Chỉ có thể in đơn thuốc sau khi bác sĩ hoàn tất đợt khám"
                   />
                   <PdfPrintButton
                     patientId={activeVisit.patientProfileId || activeVisit.patientProfile?.id}
@@ -70,6 +73,8 @@ export default function CashierInvoicePanel({
                     label="Tổng Hợp Lượt Khám"
                     variant="secondary"
                     size="sm"
+                    disabled={activeVisit.status !== 'COMPLETED'}
+                    disabledReason="Chỉ có thể in tổng hợp sau khi bác sĩ hoàn tất đợt khám"
                   />
                 </div>
               </div>

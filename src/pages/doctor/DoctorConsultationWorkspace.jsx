@@ -103,14 +103,22 @@ export default function DoctorConsultationWorkspace() {
   }, []);
 
   useEffect(() => {
+    fetchRoomsAndCatalog();
+  }, []);
+
+  useEffect(() => {
     if (selectedRoomId) {
-      fetchRoomQueue(queueTab);
+      setSelectedEncounter(null);
+      setVisit(null);
+      fetchRoomQueue(selectedRoomId, queueTab);
     }
   }, [selectedRoomId, queueTab]);
 
   useEffect(() => {
     if (selectedEncounter && selectedEncounter.visitId) {
       fetchVisitDetail(selectedEncounter.visitId);
+    } else {
+      setVisit(null);
     }
   }, [selectedEncounter]);
 
@@ -123,7 +131,14 @@ export default function DoctorConsultationWorkspace() {
 
       if (roomsRes) {
         const roomList = Array.isArray(roomsRes.data) ? roomsRes.data : (Array.isArray(roomsRes) ? roomsRes : []);
-        if (roomList.length > 0) setRooms(roomList);
+        const consultationRooms = roomList.filter(r => 
+          r.roomType === 'CONSULTATION' || r.roomType === 'EXAM' || r.type === 'CONSULTATION' || (r.name && r.name.toLowerCase().includes('khám'))
+        );
+        const activeRooms = consultationRooms.length > 0 ? consultationRooms : roomList;
+        setRooms(activeRooms);
+        if (activeRooms.length > 0 && !activeRooms.some(r => r.id === selectedRoomId)) {
+          setSelectedRoomId(activeRooms[0].id);
+        }
       }
 
       let catList = [];
@@ -141,19 +156,30 @@ export default function DoctorConsultationWorkspace() {
     }
   };
 
-  const fetchRoomQueue = async (tab = 'ALL') => {
+  const fetchRoomQueue = async (targetRoomId = selectedRoomId, tab = queueTab) => {
     setFetchingQueue(true);
     try {
-      const res = await outpatientService.getEncounterQueueByRoom(selectedRoomId, tab);
+      const res = await outpatientService.getEncounterQueueByRoom(targetRoomId, tab);
       if (res) {
         const list = Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []);
         setQueue(list);
-        if (list.length > 0 && (!selectedEncounter || !list.some(e => e.id === selectedEncounter.id))) {
-          setSelectedEncounter(list[0]);
+        if (list.length > 0) {
+          setSelectedEncounter(prev => {
+            if (prev && list.some(e => e.id === prev.id)) {
+              return list.find(e => e.id === prev.id);
+            }
+            return list[0];
+          });
+        } else {
+          setSelectedEncounter(null);
+          setVisit(null);
         }
       }
     } catch (err) {
       console.error('Lỗi lấy hàng chờ bác sĩ:', err);
+      setQueue([]);
+      setSelectedEncounter(null);
+      setVisit(null);
     } finally {
       setFetchingQueue(false);
     }
@@ -161,6 +187,7 @@ export default function DoctorConsultationWorkspace() {
 
   const fetchVisitDetail = async (vId) => {
     setLoading(true);
+    setVisit(null);
     try {
       const res = await outpatientService.getVisitDetail(vId);
       if (res && res.data) {
@@ -192,6 +219,7 @@ export default function DoctorConsultationWorkspace() {
       }
     } catch (err) {
       console.error('Lỗi nạp chi tiết đợt khám:', err);
+      setVisit(null);
     } finally {
       setLoading(false);
     }
@@ -226,6 +254,15 @@ export default function DoctorConsultationWorkspace() {
     setLoading(true);
     setMessage(null);
     try {
+      // Auto-start encounter if currently in WAITING status so UI updates immediately to IN_PROGRESS
+      if (selectedEncounter.status === 'WAITING') {
+        try {
+          await outpatientService.startEncounter(selectedEncounter.id);
+        } catch (startErr) {
+          console.warn('Tự động khởi tạo encounter thất bại:', startErr);
+        }
+      }
+
       await outpatientService.recordVitalSigns({
         visitId: visit.id,
         encounterId: selectedEncounter.id,
@@ -249,8 +286,10 @@ export default function DoctorConsultationWorkspace() {
       if (updated && updated.data) {
         setVisit(updated.data);
       }
-      setMessage({ type: 'success', text: `Đã lưu thành công Chỉ số sinh tồn & Bệnh sử lâm sàng! Bước Chỉ định Cận lâm sàng hiện đã được kích hoạt (ACTIVE).` });
-      fetchRoomQueue(queueTab);
+
+      setSelectedEncounter(prev => prev ? { ...prev, status: 'IN_PROGRESS' } : null);
+      setMessage({ type: 'success', text: `Đã lưu thành công Chỉ số sinh tồn & Bệnh sử lâm sàng! Trạng thái chuyển sang ĐANG KHÁM (IN_PROGRESS).` });
+      await fetchRoomQueue(selectedRoomId, queueTab);
     } catch (err) {
       console.error(err);
       setMessage({ type: 'error', text: 'Lỗi lưu thông tin sinh tồn: ' + (err.message || err.response?.data?.message || 'Không thể lưu') });
@@ -438,6 +477,18 @@ export default function DoctorConsultationWorkspace() {
     );
   };
 
+  const currentEncounterNumber = React.useMemo(() => {
+    if (visit?.encounters && Array.isArray(visit.encounters) && selectedEncounter) {
+      const idx = visit.encounters.findIndex(e => e.id === selectedEncounter.id);
+      if (idx >= 0) return idx + 1;
+    }
+    if (selectedEncounter?.encounterType === 'FOLLOW_UP_CONSULTATION') return 2;
+    return 1;
+  }, [visit?.encounters, selectedEncounter]);
+
+  const totalOrders = visit?.clinicalOrders?.length || 0;
+  const hasIssuedOrderInCurrentEncounter = totalOrders >= currentEncounterNumber;
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -460,7 +511,7 @@ export default function DoctorConsultationWorkspace() {
 
             <div className="flex items-center gap-3">
               <button
-                onClick={() => fetchRoomQueue(queueTab)}
+                onClick={() => fetchRoomQueue(selectedRoomId, queueTab)}
                 disabled={fetchingQueue}
                 className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl border border-white/20 backdrop-blur-md transition-all flex items-center gap-2"
               >
@@ -473,13 +524,21 @@ export default function DoctorConsultationWorkspace() {
 
         {/* Room Switcher Tabs */}
         {rooms.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex flex-wrap items-center gap-2 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-sm">
             <span className="text-xs font-bold text-slate-500 px-3 uppercase tracking-wider">Phòng Khám:</span>
-            {rooms.filter(r => r.roomType === 'CONSULTATION' || r.roomType === 'EXAM').map(room => (
+            {rooms.map(room => (
               <button
                 key={room.id}
-                onClick={() => { setSelectedRoomId(room.id); setSelectedEncounter(null); }}
-                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${selectedRoomId === room.id
+                type="button"
+                onClick={() => {
+                  if (selectedRoomId !== room.id) {
+                    setSelectedRoomId(room.id);
+                    setQueue([]);
+                    setSelectedEncounter(null);
+                    setVisit(null);
+                  }
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${selectedRoomId === room.id
                   ? 'bg-teal-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   }`}
@@ -598,24 +657,30 @@ export default function DoctorConsultationWorkspace() {
                         catalog={catalog}
                         handleCreateOrder={handleCreateOrder}
                         renderDiagnosticResultDetails={renderDiagnosticResultDetails}
+                        currentEncounterNumber={currentEncounterNumber}
+                        hasIssuedOrderInCurrentEncounter={hasIssuedOrderInCurrentEncounter}
                       />
 
-                      {/* Integrated Workspace Section 3: Diagnostic Results returned from Techs */}
-                      <RealtimeDiagnosticResultsList
-                        visit={visit}
-                        renderDiagnosticResultDetails={renderDiagnosticResultDetails}
-                      />
+                      {/* Integrated Workspace Section 3: Diagnostic Results returned from Techs (Only shown if patient returned for results and hasn't just issued a new order in current encounter) */}
+                      {totalOrders > 0 && !hasIssuedOrderInCurrentEncounter && (
+                        <RealtimeDiagnosticResultsList
+                          visit={visit}
+                          renderDiagnosticResultDetails={renderDiagnosticResultDetails}
+                        />
+                      )}
 
-                      {/* Integrated Workspace Section 4: Electronic Prescription & Finalize Visit */}
-                      <PrescriptionAndFinalizeForm
-                        visit={visit}
-                        loading={loading}
-                        diagnosisNote={diagnosisNote} setDiagnosisNote={setDiagnosisNote}
-                        dispositionType={dispositionType} setDispositionType={setDispositionType}
-                        dispositionNotes={dispositionNotes} setDispositionNotes={setDispositionNotes}
-                        prescriptionItems={prescriptionItems}
-                        handleFinalizeVisit={handleFinalizeVisit}
-                      />
+                      {/* Integrated Workspace Section 4: Electronic Prescription & Finalize Visit (Shown if no CLS ordered OR if patient returned for results and hasn't just issued a new order in current encounter) */}
+                      {(totalOrders === 0 || !hasIssuedOrderInCurrentEncounter) && (
+                        <PrescriptionAndFinalizeForm
+                          visit={visit}
+                          loading={loading}
+                          diagnosisNote={diagnosisNote} setDiagnosisNote={setDiagnosisNote}
+                          dispositionType={dispositionType} setDispositionType={setDispositionType}
+                          dispositionNotes={dispositionNotes} setDispositionNotes={setDispositionNotes}
+                          prescriptionItems={prescriptionItems}
+                          handleFinalizeVisit={handleFinalizeVisit}
+                        />
+                      )}
                     </>
                   )}
 

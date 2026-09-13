@@ -107,12 +107,14 @@ export default function TechnicianTaskQueuePage() {
               });
               setBio(updatedBio);
             } else if (detectedTemplate === 'IMAGING') {
+              const imgs = data.imageUrls || (data.imageUrl ? [data.imageUrl] : []) || [];
               setImaging({
                 serviceType: data.serviceType || 'ULTRASOUND',
                 organ: data.organ || 'Ổ bụng tổng quát',
                 findingStatus: data.findingStatus || 'Bình thường',
                 observation: data.observation || '',
-                recommendation: data.recommendation || ''
+                recommendation: data.recommendation || '',
+                imageUrls: Array.isArray(imgs) ? imgs : []
               });
             }
           } catch (e) {
@@ -480,75 +482,80 @@ export default function TechnicianTaskQueuePage() {
                   </div>
                 </div>
 
-                {/* STRUCTURED ENTRY FORM TEMPLATES */}
-                <div className="space-y-6">
+                {/* STRUCTURED ENTRY FORM TEMPLATES (Disabled when completed) */}
+                <fieldset disabled={isTaskCompleted} className="contents space-y-6">
+                  <div className="space-y-6">
 
-                  {/* CBC Template Structured Form Component */}
-                  {templateType === 'CBC' && (
-                    <CbcFormTemplate
-                      cbc={cbc}
-                      evalStatus={evalStatus}
-                      handleCbcChange={handleCbcChange}
-                      buildCbcPayload={buildCbcPayload}
-                      setCbc={setCbc}
+                    {/* CBC Template Structured Form Component */}
+                    {templateType === 'CBC' && (
+                      <CbcFormTemplate
+                        cbc={cbc}
+                        evalStatus={evalStatus}
+                        handleCbcChange={handleCbcChange}
+                        buildCbcPayload={buildCbcPayload}
+                        setCbc={setCbc}
+                      />
+                    )}
+
+                    {/* BIO Template Structured Form Component */}
+                    {templateType === 'BIO' && (
+                      <BioFormTemplate
+                        bio={bio}
+                        handleBioChange={handleBioChange}
+                      />
+                    )}
+
+                    {/* IMAGING / ULTRASOUND / CT SCANNER Form Component */}
+                    {templateType === 'IMAGING' && (
+                      <ImagingFormTemplate
+                        imaging={imaging}
+                        handleImagingChange={handleImagingChange}
+                        setImaging={setImaging}
+                        buildImagingPayload={buildImagingPayload}
+                        disabled={isTaskCompleted}
+                      />
+                    )}
+
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-extrabold text-slate-700 uppercase tracking-wider block">
+                      Mô Tả Chi Tiết / Thao Tác Kỹ Thuật (Findings):
+                    </label>
+                    <textarea
+                      rows={3}
+                      disabled={isTaskCompleted}
+                      value={findings}
+                      onChange={e => setFindings(e.target.value)}
+                      className="w-full bg-white border border-slate-300 rounded-xl p-3.5 text-slate-900 text-xs focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none font-mono disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
                     />
-                  )}
+                  </div>
 
-                  {/* BIO Template Structured Form Component */}
-                  {templateType === 'BIO' && (
-                    <BioFormTemplate
-                      bio={bio}
-                      handleBioChange={handleBioChange}
+                  <div className="space-y-2">
+                    <label className="text-xs font-extrabold text-slate-700 uppercase tracking-wider block">
+                      Kết Luận Chẩn Đoán (Conclusion):
+                    </label>
+                    <input
+                      type="text"
+                      disabled={isTaskCompleted}
+                      value={conclusion}
+                      onChange={e => setConclusion(e.target.value)}
+                      className="w-full bg-white border border-slate-300 rounded-xl p-3 text-slate-900 text-xs focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none font-bold disabled:bg-slate-100 disabled:text-slate-600 disabled:cursor-not-allowed"
                     />
-                  )}
+                  </div>
+                </fieldset>
 
-                  {/* IMAGING / ULTRASOUND / CT SCANNER Form Component */}
-                  {templateType === 'IMAGING' && (
-                    <ImagingFormTemplate
-                      imaging={imaging}
-                      handleImagingChange={handleImagingChange}
-                      setImaging={setImaging}
-                      buildImagingPayload={buildImagingPayload}
-                    />
-                  )}
-
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-extrabold text-slate-700 uppercase tracking-wider block">
-                    Mô Tả Chi Tiết / Thao Tác Kỹ Thuật (Findings):
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={findings}
-                    onChange={e => setFindings(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded-xl p-3.5 text-slate-900 text-xs focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none font-mono"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-extrabold text-slate-700 uppercase tracking-wider block">
-                    Kết Luận Chẩn Đoán (Conclusion):
-                  </label>
-                  <input
-                    type="text"
-                    value={conclusion}
-                    onChange={e => setConclusion(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded-xl p-3 text-slate-900 text-xs focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none font-bold"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`w-full py-3.5 font-extrabold text-white text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-95 ${isTaskCompleted
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700'
-                      : 'bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-600 hover:to-emerald-700'
-                    }`}
-                >
-                  <Send className="w-4 h-4" />
-                  {isTaskCompleted ? 'CẬP NHẬT LẠI KẾT QUẢ FINAL' : 'XÁC NHẬN & BẤM FINAL KẾT QUẢ'}
-                </button>
+                {/* Submit button only shown for active/waiting tasks */}
+                {!isTaskCompleted && (
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3.5 font-extrabold text-white text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-95 bg-gradient-to-r from-amber-500 to-emerald-600 hover:from-amber-600 hover:to-emerald-700"
+                  >
+                    <Send className="w-4 h-4" />
+                    XÁC NHẬN &amp; BẤM FINAL KẾT QUẢ
+                  </button>
+                )}
 
               </form>
             ) : (
