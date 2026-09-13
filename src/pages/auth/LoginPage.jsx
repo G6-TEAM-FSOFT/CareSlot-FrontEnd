@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
 import { ROLES } from '../../config/constants';
-import { Hospital, UserCheck, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Hospital, UserCheck, ShieldCheck, AlertCircle, Building2 } from 'lucide-react';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -99,6 +99,15 @@ export const LoginPage = () => {
           >
             <UserCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
             <span className="truncate">Bệnh nhân (Văn An)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => fillAccount('staff1@careslot.vn', '123456')}
+            className="px-2 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-indigo-500 hover:text-indigo-600 text-left transition flex items-center gap-1.5"
+            title="Nhân viên Clinic Partner (staff1@careslot.vn)"
+          >
+            <Building2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <span className="truncate">Clinic Staff (Đối tác)</span>
           </button>
           <button
             type="button"

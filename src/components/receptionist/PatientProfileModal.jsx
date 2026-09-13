@@ -13,68 +13,16 @@ export default function PatientProfileModal({
   loading,
   onClose,
   onSaveProfileOnly,
-  onSaveProfileAndCheckIn,
-  initialReassignMode = false
+  onSaveProfileAndCheckIn
 }) {
   if (!show || !selectedApt) return null;
 
   const isConfirmedTab = listTab === 'CONFIRMED' && selectedApt.status !== 'CHECKED_IN' && selectedApt.status !== 'COMPLETED';
-
-  const [isReassigning, setIsReassigning] = useState(initialReassignMode);
-  const [replacementSlots, setReplacementSlots] = useState([]);
-  const [loadingSlots, setLoadingSlots] = useState(false);
-  const [slotsError, setSlotsError] = useState('');
-  const [selectedReplacementSlotId, setSelectedReplacementSlotId] = useState(null);
-  const [reassignReason, setReassignReason] = useState('');
   const [formValidationMsg, setFormValidationMsg] = useState('');
 
-  const fetchReplacementSlots = async () => {
-    if (!selectedApt?.id) return;
-    setLoadingSlots(true);
-    setSlotsError('');
-    try {
-      const res = await outpatientService.getReplacementSlots(selectedApt.id);
-      const slots = res?.data || (Array.isArray(res) ? res : []);
-      setReplacementSlots(slots);
-      if (slots.length > 0) {
-        setSelectedReplacementSlotId((prev) => prev || slots[0].id);
-      }
-    } catch (err) {
-      console.error('Lỗi tải replacement slots:', err);
-      setSlotsError(err?.message || err?.response?.data?.message || 'Không thể tải danh sách slot thay thế.');
-    } finally {
-      setLoadingSlots(false);
-    }
-  };
-
-  useEffect(() => {
-    if (show && selectedApt) {
-      setIsReassigning(Boolean(initialReassignMode));
-      setSelectedReplacementSlotId(null);
-      setReassignReason('');
-      setSlotsError('');
-      setFormValidationMsg('');
-      if (initialReassignMode) {
-        fetchReplacementSlots();
-      }
-    }
-  }, [show, selectedApt, initialReassignMode]);
-
   const handleCheckInSubmit = (e) => {
-    if (isReassigning) {
-      if (!selectedReplacementSlotId) {
-        setFormValidationMsg('Vui lòng chọn một Bác sĩ / Phòng khám thay thế từ danh sách.');
-        return;
-      }
-      setFormValidationMsg('');
-      onSaveProfileAndCheckIn(e, {
-        replacementSlotId: selectedReplacementSlotId,
-        reason: reassignReason.trim() || undefined
-      });
-    } else {
-      setFormValidationMsg('');
-      onSaveProfileAndCheckIn(e, {});
-    }
+    setFormValidationMsg('');
+    onSaveProfileAndCheckIn(e, {});
   };
 
   const patientId = selectedApt.patientProfileId || selectedApt.patientProfile?.id;
@@ -207,159 +155,6 @@ export default function PatientProfileModal({
               )}
             </div>
           </div>
-
-          {/* Section 0.5: Reassignment Panel (Only visible for CONFIRMED appointments) */}
-          {isConfirmedTab && (
-            <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-4 space-y-3 transition-all">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/80 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <Shuffle className="w-4 h-4 text-amber-600" />
-                  <h4 className="font-extrabold text-amber-950 text-xs uppercase tracking-wider">
-                    Điều Phối Lại Bác Sĩ & Phòng Khám (Reassignment)
-                  </h4>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200/70 text-amber-900">
-                    Linh hoạt tại quầy
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const next = !isReassigning;
-                    setIsReassigning(next);
-                    if (next && replacementSlots.length === 0) {
-                      fetchReplacementSlots();
-                    }
-                  }}
-                  className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 border shadow-sm ${
-                    isReassigning
-                      ? 'bg-amber-600 border-amber-600 text-white shadow-amber-200'
-                      : 'bg-white border-amber-300 text-amber-800 hover:bg-amber-100/60'
-                  }`}
-                >
-                  <Shuffle className="w-3.5 h-3.5" />
-                  <span>{isReassigning ? 'Đang bật đổi Bác sĩ (Bấm để hủy)' : 'Đổi Bác sĩ / Phòng khác'}</span>
-                </button>
-              </div>
-
-              {!isReassigning ? (
-                <p className="text-[11.5px] text-amber-800 leading-relaxed">
-                  Bác sĩ hiện tại: <strong className="text-emerald-800">{selectedApt.doctorName || selectedApt.slot?.doctor?.fullName || 'BS. Chuyên Khoa'}</strong>
-                  {selectedApt.roomName ? <> tại <strong className="text-slate-800">{selectedApt.roomName}</strong></> : ''}
-                  {selectedApt.specialtyName ? <> (Khoa {selectedApt.specialtyName})</> : ''}. 
-                  Nếu bác sĩ gặp sự cố (ca mổ khẩn, vắng mặt đột xuất), bấm nút <strong className="text-amber-900">"Đổi Bác sĩ / Phòng khác"</strong> phía trên để chọn Bác sĩ thay thế trong cùng khung giờ.
-                </p>
-              ) : (
-                <div className="space-y-3.5 pt-1">
-                  {/* Replacement slots selection */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                        <Stethoscope className="w-3.5 h-3.5 text-indigo-600" />
-                        Chọn Bác Sĩ / Phòng Khám thay thế: <span className="text-rose-500">*</span>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={fetchReplacementSlots}
-                        disabled={loadingSlots}
-                        className="text-[11px] font-bold text-cyan-700 hover:text-cyan-900 flex items-center gap-1"
-                      >
-                        <RefreshCw className={`w-3 h-3 ${loadingSlots ? 'animate-spin' : ''}`} />
-                        Làm mới danh sách
-                      </button>
-                    </div>
-
-                    {loadingSlots ? (
-                      <div className="p-4 bg-white border border-amber-200 rounded-xl text-center text-slate-500 flex items-center justify-center gap-2 text-xs">
-                        <RefreshCw className="w-4 h-4 animate-spin text-amber-600" />
-                        Đang tìm kiếm các slot rảnh cùng chuyên khoa & khung giờ...
-                      </div>
-                    ) : slotsError ? (
-                      <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs flex items-center justify-between gap-2">
-                        <span>{slotsError}</span>
-                        <button
-                          type="button"
-                          onClick={fetchReplacementSlots}
-                          className="px-2 py-1 bg-rose-600 text-white rounded text-[11px] font-bold"
-                        >
-                          Thử lại
-                        </button>
-                      </div>
-                    ) : replacementSlots.length === 0 ? (
-                      <div className="p-3.5 bg-white border border-amber-200 rounded-xl text-amber-900 text-xs flex items-start gap-2">
-                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-semibold">Không tìm thấy slot nào khác còn trống!</p>
-                          <p className="text-[11px] text-amber-800 mt-0.5">
-                            Không có bác sĩ/phòng khám nào khác cùng chuyên khoa còn trống trong khung giờ 
-                            ({selectedApt.startTime ? selectedApt.startTime.substring(0, 5) : ''} - {selectedApt.endTime ? selectedApt.endTime.substring(0, 5) : ''}) vào ngày {selectedApt.appointmentDate}.
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="grid sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto pr-1">
-                        {replacementSlots.map((slot) => {
-                          const isSelected = selectedReplacementSlotId === slot.id;
-                          return (
-                            <div
-                              key={slot.id}
-                              onClick={() => setSelectedReplacementSlotId(slot.id)}
-                              className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-2.5 ${
-                                isSelected
-                                  ? 'bg-emerald-50 border-emerald-500 ring-2 ring-emerald-200 shadow-sm'
-                                  : 'bg-white border-slate-200 hover:border-amber-300 hover:bg-amber-50/40'
-                              }`}
-                            >
-                              <input
-                                type="radio"
-                                name="replacementSlot"
-                                checked={isSelected}
-                                onChange={() => setSelectedReplacementSlotId(slot.id)}
-                                className="mt-1 text-emerald-600 focus:ring-emerald-500"
-                              />
-                              <div className="space-y-0.5 flex-1 min-w-0">
-                                <div className="font-extrabold text-slate-900 text-xs flex items-center justify-between">
-                                  <span className="truncate">{slot.doctorName || 'Bác sĩ thay thế'}</span>
-                                  <span className="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded">
-                                    Slot #{slot.id}
-                                  </span>
-                                </div>
-                                <div className="text-[11px] text-slate-600 flex items-center gap-1">
-                                  <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                                  <span className="font-medium truncate">{slot.roomName || `Phòng ${slot.roomNumber || ''}`}</span>
-                                </div>
-                                <div className="text-[10.5px] font-mono font-bold text-cyan-800">
-                                  {slot.startTime ? slot.startTime.substring(0, 5) : ''} - {slot.endTime ? slot.endTime.substring(0, 5) : ''}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Optional Reason / Notes */}
-                  <div className="space-y-1">
-                    <label className="font-bold text-slate-800 block text-xs flex items-center gap-1">
-                      Ghi chú / Lý do đổi Bác sĩ: <span className="text-slate-400 font-normal">(tùy chọn)</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={reassignReason}
-                      onChange={(e) => setReassignReason(e.target.value)}
-                      placeholder="Ví dụ: Bác sĩ Minh bận ca mổ khẩn (để trống nếu không cần ghi chú)..."
-                      maxLength={1000}
-                      className="w-full bg-white border border-amber-300 focus:border-amber-500 rounded-xl p-2.5 text-xs text-slate-900 focus:ring-2 focus:ring-amber-100 outline-none"
-                    />
-                    <p className="text-[10.5px] text-slate-500 italic">
-                      * Hệ thống sẽ tự động điều phối lại và xử lý slot cũ để tránh việc phân bổ lặp lại.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Section 1: Thông tin hành chính cơ bản */}
           <div className="space-y-3">
@@ -539,16 +334,12 @@ export default function PatientProfileModal({
               {isConfirmedTab && (
                 <button
                   type="button"
-                  disabled={savingProfile || loading || (isReassigning && !selectedReplacementSlotId)}
+                  disabled={savingProfile || loading}
                   onClick={handleCheckInSubmit}
-                  className={`px-5 py-2.5 font-extrabold text-white text-xs rounded-xl shadow-md active:scale-95 transition flex items-center gap-2 disabled:opacity-50 ${
-                    isReassigning
-                      ? 'bg-gradient-to-r from-amber-600 to-emerald-600 hover:from-amber-500 hover:to-emerald-500'
-                      : 'bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500'
-                  }`}
+                  className="px-5 py-2.5 font-extrabold text-white text-xs rounded-xl shadow-md active:scale-95 transition flex items-center gap-2 disabled:opacity-50 bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 cursor-pointer"
                 >
                   <UserCheck className="w-4 h-4" />
-                  <span>{isReassigning ? 'XÁC NHẬN ĐỔI BÁC SĨ & CHECK-IN' : 'LƯU HỒ SƠ & CHECK-IN NGAY'}</span>
+                  <span>LƯU HỒ SƠ & CHECK-IN NGAY</span>
                 </button>
               )}
             </div>
