@@ -11,7 +11,9 @@ export default function ClinicalOrderRoundsForm({
   setSelectedServiceIds,
   catalog,
   handleCreateOrder,
-  renderDiagnosticResultDetails
+  renderDiagnosticResultDetails,
+  currentEncounterNumber = 1,
+  hasIssuedOrderInCurrentEncounter = false
 }) {
   if (!visit || visit.status === 'COMPLETED') return null;
 
@@ -82,22 +84,34 @@ export default function ClinicalOrderRoundsForm({
         </div>
       )}
 
-      {/* Button to trigger Order Round 2 creation if Order Round 1 exists and Order Round 2 form is not open */}
-      {visit.clinicalOrders && visit.clinicalOrders.length > 0 && !showRound2Form && (
+      {/* Button to trigger next Order Round creation if previous orders exist, form is not open, AND doctor hasn't created a new order in current encounter */}
+      {visit.clinicalOrders && visit.clinicalOrders.length > 0 && !hasIssuedOrderInCurrentEncounter && !showRound2Form && (
         <div className="flex items-center justify-between bg-indigo-50/80 p-4 rounded-2xl border border-indigo-200">
           <button
             type="button"
             onClick={() => setShowRound2Form(true)}
-            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 flex-shrink-0 active:scale-95"
+            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 flex-shrink-0 active:scale-95 cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
-            + Tạo Lệnh Chỉ Định Vòng 2 (Order Round 2)
+            + Tạo Lệnh Chỉ Định Vòng {(visit.clinicalOrders.length) + 1} (Order Round {visit.clinicalOrders.length + 1})
           </button>
         </div>
       )}
 
-      {/* Order Selection Form: Shown when NO orders exist (Round 1) OR when showRound2Form is true (Round 2+) */}
-      {(visit.clinicalOrders?.length === 0 || showRound2Form) && (
+      {/* Info Notice when an order round was issued in current encounter */}
+      {hasIssuedOrderInCurrentEncounter && visit.clinicalOrders && visit.clinicalOrders.length > 0 && (
+        <div className="p-4 bg-teal-50/80 border border-teal-200 rounded-2xl text-xs text-teal-900 space-y-1 shadow-sm">
+          <strong className="font-extrabold text-teal-950 flex items-center gap-1.5">
+            ✓ Đã phát hành Lệnh chỉ định Round {visit.clinicalOrders.length} thành công!
+          </strong>
+          <p className="text-[11px] text-teal-800 leading-relaxed">
+            Bệnh nhân sẽ di chuyển đến các phòng Cận lâm sàng để thực hiện xét nghiệm/siêu âm/CT. Kết quả cận lâm sàng Round {visit.clinicalOrders.length}, chỉ định bổ sung (Round {visit.clinicalOrders.length + 1}) và kê đơn thuốc sẽ hiển thị ở lượt khám <strong>Quay Lại Đọc Kết Quả (Encounter {currentEncounterNumber + 1})</strong>.
+          </p>
+        </div>
+      )}
+
+      {/* Order Selection Form: Shown when NO orders exist (Round 1) OR when showRound2Form is true */}
+      {((visit.clinicalOrders?.length === 0) || showRound2Form) && (
         <div className={`p-5 rounded-2xl border transition-all ${isVitalAndHistorySaved
           ? 'bg-slate-50 border-slate-200 space-y-4 shadow-sm'
           : 'bg-slate-100/80 border-slate-300 space-y-4 opacity-80'

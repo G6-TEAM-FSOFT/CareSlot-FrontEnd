@@ -16,12 +16,16 @@ const PdfPrintButton = ({
   label,
   className = '',
   variant = 'primary',
-  size = 'md'
+  size = 'md',
+  disabled = false,
+  disabledReason = '',
+  title = ''
 }) => {
   const [loading, setLoading] = useState(false);
 
   const handlePrint = async (e) => {
     if (e) e.stopPropagation();
+    if (disabled) return;
     if (!patientId || !visitId) {
       alert("Thiếu thông tin bệnh nhân hoặc lượt khám!");
       return;
@@ -95,7 +99,7 @@ const PdfPrintButton = ({
     }
   };
 
-  const baseStyles = 'inline-flex items-center gap-1.5 font-bold rounded-xl shadow-sm transition-all disabled:opacity-50 active:scale-95 cursor-pointer';
+  const baseStyles = 'inline-flex items-center gap-1.5 font-bold rounded-xl shadow-sm transition-all';
   const sizeStyles = size === 'sm' ? 'px-2.5 py-1 text-[11px]' : 'px-3.5 py-2 text-xs';
   const variantStyles = variant === 'secondary'
     ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
@@ -107,12 +111,15 @@ const PdfPrintButton = ({
     ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-200'
     : 'bg-teal-600 hover:bg-teal-700 text-white shadow-teal-200';
 
+  const isBtnDisabled = loading || disabled;
+
   return (
     <button
       type="button"
       onClick={handlePrint}
-      disabled={loading}
-      className={`${baseStyles} ${sizeStyles} ${variantStyles} ${className}`}
+      disabled={isBtnDisabled}
+      title={disabled ? (disabledReason || 'Chỉ khả dụng khi đợt khám đã hoàn tất') : (title || '')}
+      className={`${baseStyles} ${sizeStyles} ${variantStyles} ${disabled ? 'opacity-50 cursor-not-allowed active:scale-100 hover:opacity-50' : 'cursor-pointer active:scale-95'} ${className}`}
     >
       {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Printer className="w-3.5 h-3.5" />}
       <span>{label || getDefaultLabel()}</span>

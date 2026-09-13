@@ -13,7 +13,7 @@ export default function DoctorMedicalHistoryModal({
 }) {
   if (!show) return null;
   const pId = visit?.patientProfileId || selectedEncounter?.patientProfileId || (patientHistoryList && patientHistoryList[0]?.patientProfileId);
-  const completedHistoryList = (patientHistoryList || []).filter(v => v.status === 'COMPLETED');
+  const historyList = patientHistoryList || [];
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -25,7 +25,7 @@ export default function DoctorMedicalHistoryModal({
               <History className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="font-extrabold text-lg">Lịch Sử Khám Bệnh (Đợt Khám Đã Hoàn Tất)</h3>
+              <h3 className="font-extrabold text-lg">Lịch Sử Khám Bệnh Bệnh Nhân</h3>
               <p className="text-xs text-indigo-100 font-mono">Bệnh nhân: {visit?.patientName || selectedEncounter?.patientName || 'Chi tiết lịch sử'}</p>
             </div>
           </div>
@@ -44,17 +44,19 @@ export default function DoctorMedicalHistoryModal({
               <RefreshCw className="w-6 h-6 animate-spin mx-auto text-indigo-600" />
               <p className="font-medium">Đang tải lịch sử khám từ cơ sở dữ liệu...</p>
             </div>
-          ) : completedHistoryList.length > 0 ? (
+          ) : historyList.length > 0 ? (
             <div className="space-y-4">
-              {completedHistoryList.map((histVisit, index) => {
+              {historyList.map((histVisit, index) => {
                 const targetPatientId = pId || histVisit.patientProfileId || 1;
+                const isVisitCompleted = histVisit.status === 'COMPLETED';
+
                 return (
                   <div key={histVisit.id || index} className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 hover:border-indigo-300 transition shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
                       <div className="flex items-center gap-2">
                         <span className="font-mono font-black text-indigo-800 text-sm">VISIT: {histVisit.visitCode}</span>
-                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md border ${histVisit.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
-                          {histVisit.status === 'COMPLETED' ? 'Đã hoàn tất' : 'Đang khám'}
+                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md border ${isVisitCompleted ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                          {isVisitCompleted ? 'Đã hoàn tất' : 'Đang khám'}
                         </span>
                       </div>
                       <div className="text-[11px] font-mono text-slate-500">
@@ -118,6 +120,8 @@ export default function DoctorMedicalHistoryModal({
                         label="In Đơn Thuốc"
                         variant="emerald"
                         size="sm"
+                        disabled={!isVisitCompleted}
+                        disabledReason="Chỉ có thể in đơn thuốc khi đợt khám đã hoàn tất"
                       />
 
                       <PdfPrintButton
@@ -127,6 +131,8 @@ export default function DoctorMedicalHistoryModal({
                         label="Tổng Hợp Lượt Khám"
                         variant="secondary"
                         size="sm"
+                        disabled={!isVisitCompleted}
+                        disabledReason="Chỉ có thể in tổng hợp khi đợt khám đã hoàn tất"
                       />
                     </div>
                   </div>
@@ -136,7 +142,7 @@ export default function DoctorMedicalHistoryModal({
           ) : (
             <div className="space-y-4 text-center py-12 text-slate-500">
               <FileText className="w-10 h-10 text-slate-300 mx-auto" />
-              <p className="font-medium">Bệnh nhân chưa có lịch sử lượt khám nào hoàn tất.</p>
+              <p className="font-medium">Bệnh nhân chưa có lịch sử lượt khám nào.</p>
             </div>
           )}
         </div>

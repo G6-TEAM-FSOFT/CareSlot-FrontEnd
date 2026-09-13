@@ -83,6 +83,8 @@ export default function PatientProfileModal({
                       label="In Đơn Thuốc"
                       variant="emerald"
                       size="sm"
+                      disabled={selectedApt.status !== 'COMPLETED' && selectedApt.visitStatus !== 'COMPLETED' && selectedApt.visit?.status !== 'COMPLETED'}
+                      disabledReason="Chỉ có thể in đơn thuốc sau khi đợt khám đã hoàn tất"
                     />
                     <PdfPrintButton
                       patientId={patientId}
@@ -91,6 +93,8 @@ export default function PatientProfileModal({
                       label="Tổng Hợp Lượt Khám"
                       variant="secondary"
                       size="sm"
+                      disabled={selectedApt.status !== 'COMPLETED' && selectedApt.visitStatus !== 'COMPLETED' && selectedApt.visit?.status !== 'COMPLETED'}
+                      disabledReason="Chỉ có thể in tổng hợp sau khi đợt khám đã hoàn tất"
                     />
                   </div>
                 )}
