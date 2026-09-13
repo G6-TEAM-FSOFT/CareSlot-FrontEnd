@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { CreditCard, Eye, ChevronRight, X, User } from 'lucide-react';
+import { CreditCard, Eye, ChevronRight, X, User, Printer } from 'lucide-react';
 import CompactJourneySteps from './CompactJourneySteps';
+import PdfPrintButton from '../PdfPrintButton';
 
 export default function CashierInvoicePanel({
   activeVisit,
@@ -25,7 +26,7 @@ export default function CashierInvoicePanel({
           <div className="space-y-5">
 
             {/* Patient Info Card */}
-            <div className="bg-gradient-to-br from-slate-50 to-emerald-50/30 p-4 rounded-2xl border border-slate-200 space-y-2 relative overflow-hidden">
+            <div className="bg-gradient-to-br from-slate-50 to-emerald-50/30 p-4 rounded-2xl border border-slate-200 space-y-3 relative overflow-hidden">
               <div className="flex items-center justify-between text-[10px] text-emerald-800 font-mono font-bold uppercase tracking-widest">
                 <span>ĐỢT KHÁM ĐANG MỞ • VISIT ID #{activeVisit.id}</span>
                 <span className={`px-2 py-0.5 rounded border ${activeVisit.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-amber-100 text-amber-800 border-amber-300'}`}>
@@ -40,6 +41,37 @@ export default function CashierInvoicePanel({
                 <div>SĐT: <span className="text-slate-800 font-mono">{activeVisit.patientPhone}</span></div>
                 <div>Bác sĩ chính: <span className="text-emerald-700 font-semibold">{activeVisit.primaryDoctorName}</span></div>
                 <div>Cơ sở: <span className="text-slate-700">{activeVisit.clinicName}</span></div>
+              </div>
+
+              {/* PDF Action Buttons for Receptionist */}
+              <div className="pt-2.5 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Xuất & In Chứng Từ:</span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <PdfPrintButton
+                    patientId={activeVisit.patientProfileId || activeVisit.patientProfile?.id}
+                    visitId={activeVisit.id}
+                    type="examination"
+                    label="In Phiếu Khám"
+                    variant="indigo"
+                    size="sm"
+                  />
+                  <PdfPrintButton
+                    patientId={activeVisit.patientProfileId || activeVisit.patientProfile?.id}
+                    visitId={activeVisit.id}
+                    type="prescription"
+                    label="In Đơn Thuốc"
+                    variant="emerald"
+                    size="sm"
+                  />
+                  <PdfPrintButton
+                    patientId={activeVisit.patientProfileId || activeVisit.patientProfile?.id}
+                    visitId={activeVisit.id}
+                    type="summary"
+                    label="Tổng Hợp Lượt Khám"
+                    variant="secondary"
+                    size="sm"
+                  />
+                </div>
               </div>
             </div>
 

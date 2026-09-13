@@ -27,6 +27,8 @@ import { appointmentService } from '../../services/clinicService';
 import { outpatientService } from '../../services/outpatientService';
 import { patientService } from '../../services/patientService';
 import { PaymentModal } from '../../components/payment/PaymentModal';
+import PdfPrintButton from '../../components/PdfPrintButton';
+import { parseClinicalNote } from '../../utils/formatters';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const AppointmentHistoryPage = () => {
@@ -544,8 +546,8 @@ export const AppointmentHistoryPage = () => {
                     <span>Trợ lý nhập: <strong className="text-slate-800">{n.enteredByName}</strong></span>
                     <span>BS Chuyên môn: <strong className="text-emerald-700">{n.clinicalAuthorName}</strong></span>
                   </div>
-                  <div className="bg-slate-50 p-3 rounded-lg text-slate-800 font-mono text-[11px] whitespace-pre-wrap border border-slate-200">
-                    {n.formData}
+                  <div className="bg-slate-50 p-3 rounded-lg text-slate-800 text-xs font-medium whitespace-pre-wrap border border-slate-200">
+                    {parseClinicalNote(n.formData)}
                   </div>
                 </div>
               ))
@@ -979,13 +981,48 @@ export const AppointmentHistoryPage = () => {
                               {/* Sub-tab 1: Overview */}
                               {visitHistorySubTab === 'overview' && (
                                 <div className="space-y-4 text-xs">
-                                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-2">
+                                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
                                     <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Thông Tin Đợt Khám & Bác Sĩ Chuyên Khoa:</div>
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-slate-800">
                                       <div>Mã đợt khám: <strong className="text-sky-700 font-mono block">{visit.visitCode}</strong></div>
                                       <div>Mã lịch hẹn: <strong className="text-slate-900 font-mono block">{visit.bookingCode || 'N/A'}</strong></div>
                                       <div>Bác sĩ chính: <strong className="text-emerald-700 block">{visit.primaryDoctorName}</strong></div>
                                       <div>Cơ sở khám: <strong className="text-slate-700 block">{visit.clinicName}</strong></div>
+                                    </div>
+
+                                    {/* Action Bar for PDFs */}
+                                    <div className="pt-3 border-t border-slate-200 flex flex-wrap items-center gap-2">
+                                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider w-full sm:w-auto block">Xuất file PDF & In chứng từ:</span>
+                                      
+                                      <PdfPrintButton
+                                        patientId={visit.patientProfileId}
+                                        visitId={visit.id}
+                                        type="examination"
+                                        label="In Phiếu Khám"
+                                        variant="indigo"
+                                        size="sm"
+                                      />
+
+                                      {visit.prescription?.id && (
+                                        <PdfPrintButton
+                                          patientId={visit.patientProfileId}
+                                          visitId={visit.id}
+                                          prescriptionId={visit.prescription.id}
+                                          type="prescription"
+                                          label="In Đơn Thuốc"
+                                          variant="emerald"
+                                          size="sm"
+                                        />
+                                      )}
+
+                                      <PdfPrintButton
+                                        patientId={visit.patientProfileId}
+                                        visitId={visit.id}
+                                        type="summary"
+                                        label="Tổng Hợp Lượt Khám"
+                                        variant="secondary"
+                                        size="sm"
+                                      />
                                     </div>
                                   </div>
 
