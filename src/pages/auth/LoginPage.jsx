@@ -88,9 +88,28 @@ export const LoginPage = () => {
             type="button"
             onClick={() => fillAccount('tech.lab@careslot.vn', '123456')}
             className="px-2 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-amber-500 hover:text-amber-600 text-left transition flex items-center gap-1.5"
+            title="KTV Xét nghiệm (Phòng A101)"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-            <span className="truncate">KTV Cận lâm sàng</span>
+            <span className="truncate">KTV Lab (A101)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => fillAccount('tech.imaging@careslot.vn', '123456')}
+            className="px-2 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-amber-500 hover:text-amber-600 text-left transition flex items-center gap-1.5"
+            title="KTV Siêu âm (Phòng B201)"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span className="truncate">KTV Siêu âm (B201)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => fillAccount('nguyendangkhoa5104@gmail.com', '123456')}
+            className="px-2 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-amber-500 hover:text-amber-600 text-left transition flex items-center gap-1.5"
+            title="KTV Chụp CT (Phòng B202)"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span className="truncate">KTV CT (B202)</span>
           </button>
           <button
             type="button"

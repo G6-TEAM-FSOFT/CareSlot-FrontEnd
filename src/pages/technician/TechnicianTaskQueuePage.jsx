@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { outpatientService } from '../../services/outpatientService';
+import { useAuth } from '../../hooks/useAuth';
 import {
-  CheckCircle2, FileText, Send, FlaskConical, RefreshCw, Sparkles, User, Stethoscope, Clock
+  CheckCircle2, FileText, Send, FlaskConical, RefreshCw, Sparkles, User, Stethoscope
 } from 'lucide-react';
 
 import TechnicianTaskQueueList from '../../components/technician/TechnicianTaskQueueList';
@@ -11,8 +12,9 @@ import ImagingFormTemplate from '../../components/technician/ImagingFormTemplate
 import PdfPrintButton from '../../components/PdfPrintButton';
 
 export default function TechnicianTaskQueuePage() {
+  const { user } = useAuth();
   const [rooms, setRooms] = useState([]);
-  const [selectedRoomId, setSelectedRoomId] = useState(2); // Room A101 Lab collection
+  const [selectedRoomId, setSelectedRoomId] = useState(null); // Dynamic assigned room
   const [activeTab, setActiveTab] = useState('WAITING'); // 'WAITING' | 'COMPLETED'
   const [tasks, setTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -58,7 +60,7 @@ export default function TechnicianTaskQueuePage() {
 
   useEffect(() => {
     fetchRooms();
-  }, []);
+  }, [user?.clinicId]);
 
   useEffect(() => {
     if (selectedRoomId) {
@@ -66,85 +68,19 @@ export default function TechnicianTaskQueuePage() {
     }
   }, [selectedRoomId, activeTab]);
 
-  // Auto-detect template & populate values when task changes
-  useEffect(() => {
-    if (selectedTask) {
-      const code = (selectedTask.serviceCode || '').toUpperCase();
-      const name = (selectedTask.serviceName || '').toUpperCase();
-
-      let detectedTemplate = 'IMAGING';
-      if (code.includes('CBC') || code.includes('MAU') || name.includes('MÁU') || name.includes('HUYẾT HỌC') || name.includes('CBC')) {
-        detectedTemplate = 'CBC';
-      } else if (code.includes('BIO') || code.includes('SHM') || name.includes('SINH HÓA') || name.includes('GLUCOSE')) {
-        detectedTemplate = 'BIO';
-      }
-      setTemplateType(detectedTemplate);
-
-      // Populate existing result if task is completed or has result
-      if (selectedTask.result) {
-        setFindings(selectedTask.result.findings || '');
-        setConclusion(selectedTask.result.conclusion || '');
-
-        if (selectedTask.result.resultData) {
-          setResultData(selectedTask.result.resultData);
-          try {
-            const data = typeof selectedTask.result.resultData === 'string'
-              ? JSON.parse(selectedTask.result.resultData)
-              : selectedTask.result.resultData;
-
-            if (detectedTemplate === 'CBC' && data.parameters) {
-              const updatedCbc = { ...cbc };
-              data.parameters.forEach(p => {
-                const k = (p.code || '').toLowerCase();
-                if (k in updatedCbc) updatedCbc[k] = p.value;
-              });
-              setCbc(updatedCbc);
-            } else if (detectedTemplate === 'BIO' && data.parameters) {
-              const updatedBio = { ...bio };
-              data.parameters.forEach(p => {
-                const k = (p.code || '').toLowerCase();
-                if (k in updatedBio) updatedBio[k] = p.value;
-              });
-              setBio(updatedBio);
-            } else if (detectedTemplate === 'IMAGING') {
-              const imgs = data.imageUrls || (data.imageUrl ? [data.imageUrl] : []) || [];
-              setImaging({
-                serviceType: data.serviceType || 'ULTRASOUND',
-                organ: data.organ || 'Ổ bụng tổng quát',
-                findingStatus: data.findingStatus || 'Bình thường',
-                observation: data.observation || '',
-                recommendation: data.recommendation || '',
-                imageUrls: Array.isArray(imgs) ? imgs : []
-              });
-            }
-          } catch (e) {
-            console.error("Lỗi parse JSON resultData:", e);
-          }
-        }
-      } else {
-        // Initialize default payloads for new ready tasks
-        if (detectedTemplate === 'CBC') {
-          buildCbcPayload(cbc);
-        } else if (detectedTemplate === 'BIO') {
-          buildBioPayload(bio);
-        } else {
-          setTemplateType('IMAGING');
-          const imgType = name.includes('CT') || code.includes('CT') ? 'CT_SCAN' : 'ULTRASOUND';
-          const nextImg = { ...imaging, serviceType: imgType, imageUrls: [] };
-          setImaging(nextImg);
-          buildImagingPayload(nextImg);
-        }
-      }
-    }
-  }, [selectedTask]);
-
   const fetchRooms = async () => {
     try {
-      const res = await outpatientService.getRooms(1);
+      const clinicId = user?.clinicId || 1;
+      const res = await outpatientService.getRooms(clinicId);
       if (res && res.data) {
         const diagRooms = res.data.filter(r => r.roomType !== 'CONSULTATION' && r.roomType !== 'CASHIER');
-        setRooms(diagRooms.length > 0 ? diagRooms : res.data);
-        if (diagRooms.length > 0) setSelectedRoomId(diagRooms[0].id);
+        const activeRooms = diagRooms.length > 0 ? diagRooms : res.data;
+        setRooms(activeRooms);
+        if (activeRooms.length > 0) {
+          setSelectedRoomId(prev => (prev && activeRooms.some(r => r.id === prev)) ? prev : activeRooms[0].id);
+        } else {
+          setSelectedRoomId(null);
+        }
       }
     } catch (err) {
       console.error('Lỗi lấy danh sách phòng CLS:', err);
@@ -251,6 +187,95 @@ export default function TechnicianTaskQueuePage() {
     setConclusion(`Kết quả Chẩn đoán hình ảnh: ${newImg.findingStatus}. ${newImg.recommendation || ''}`);
   };
 
+  useEffect(() => {
+    if (!rooms || rooms.length === 0) return;
+    const currentRoom = rooms.find(r => r.id === selectedRoomId);
+
+    let targetTemplate = 'CBC';
+
+    if (selectedTask) {
+      const svcCode = (selectedTask.serviceCode || '').toUpperCase();
+      const svcType = (selectedTask.serviceType || '').toUpperCase();
+
+      if (svcCode.includes('CBC')) {
+        targetTemplate = 'CBC';
+      } else if (svcCode.includes('BIO') || svcType === 'BIOCHEMISTRY') {
+        targetTemplate = 'BIO';
+      } else if (svcType === 'IMAGING' || svcCode.includes('US') || svcCode.includes('CT') || svcCode.includes('XRAY')) {
+        targetTemplate = 'IMAGING';
+      }
+    } else if (currentRoom) {
+      const roomType = (currentRoom.roomType || '').toUpperCase();
+      const roomNum = (currentRoom.roomNumber || '').toUpperCase();
+      const roomName = (currentRoom.name || '').toLowerCase();
+
+      if (roomType === 'ULTRASOUND' || roomType === 'CT' || roomNum === 'B201' || roomNum === 'B202' || roomName.includes('siêu âm') || roomName.includes('ct') || roomName.includes('chẩn đoán hình ảnh')) {
+        targetTemplate = 'IMAGING';
+      } else if (roomType === 'LAB_COLLECTION' || roomNum === 'A101' || roomName.includes('xét nghiệm')) {
+        targetTemplate = 'CBC';
+      }
+    }
+
+    setTemplateType(targetTemplate);
+
+    if (selectedTask?.result?.resultData) {
+      try {
+        const parsed = JSON.parse(selectedTask.result.resultData);
+        if (targetTemplate === 'IMAGING' && parsed) {
+          setImaging({
+            serviceType: parsed.serviceType || (currentRoom?.roomNumber === 'B202' ? 'CT_SCAN' : 'ULTRASOUND'),
+            organ: parsed.organ || (currentRoom?.roomNumber === 'B202' ? 'Sọ não / Ổ bụng (Chụp CT)' : 'Ổ bụng tổng quát'),
+            findingStatus: parsed.findingStatus || 'Bình thường',
+            observation: parsed.observation || '',
+            recommendation: parsed.recommendation || '',
+            imageUrls: parsed.imageUrls || []
+          });
+        } else if (targetTemplate === 'CBC' && parsed.parameters) {
+          const cbcMap = {};
+          parsed.parameters.forEach(p => {
+            if (p.code) cbcMap[p.code.toLowerCase()] = p.value;
+          });
+          setCbc(prev => ({ ...prev, ...cbcMap }));
+        } else if (targetTemplate === 'BIO' && parsed.parameters) {
+          const bioMap = {};
+          parsed.parameters.forEach(p => {
+            if (p.code) bioMap[p.code.toLowerCase()] = p.value;
+          });
+          setBio(prev => ({ ...prev, ...bioMap }));
+        }
+      } catch (err) {
+        console.error('Lỗi parse resultData:', err);
+      }
+      setFindings(selectedTask.result.findings || '');
+      setConclusion(selectedTask.result.conclusion || '');
+    } else {
+      if (targetTemplate === 'IMAGING') {
+        const isCt = (selectedTask?.serviceCode || '').includes('CT') || currentRoom?.roomNumber === 'B202' || (currentRoom?.name || '').toLowerCase().includes('ct');
+        const defaultImaging = isCt ? {
+          serviceType: 'CT_SCAN',
+          organ: 'Sọ não / Ổ bụng (Chụp CT)',
+          findingStatus: 'Bình thường',
+          observation: 'Hình ảnh Cắt lớp vi tính (CT): Nhu mô không thấy tổn thương đè đẩy hay tụ máu bất thường. Các cấu trúc giải phẫu nguyên vẹn.',
+          recommendation: 'Hình ảnh CT Scanner trong giới hạn bình thường, chưa phát hiện tổn thương khu trú.',
+          imageUrls: []
+        } : {
+          serviceType: 'ULTRASOUND',
+          organ: 'Ổ bụng tổng quát',
+          findingStatus: 'Bình thường',
+          observation: 'Gan, mật, tụy, lách, hai thận kích thước và cấu trúc nhu mô bình thường. Không thấy dịch tự do ổ bụng.',
+          recommendation: 'Không phát hiện bất thường trên hình ảnh siêu âm.',
+          imageUrls: []
+        };
+        setImaging(defaultImaging);
+        buildImagingPayload(defaultImaging);
+      } else if (targetTemplate === 'CBC') {
+        buildCbcPayload(cbc);
+      } else if (targetTemplate === 'BIO') {
+        buildBioPayload(bio);
+      }
+    }
+  }, [selectedRoomId, selectedTask, rooms]);
+
   const handleCbcChange = (field, value) => {
     const next = { ...cbc, [field]: value };
     setCbc(next);
@@ -308,15 +333,22 @@ export default function TechnicianTaskQueuePage() {
         <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-md">
           <div className="flex flex-wrap items-center justify-between gap-4 relative z-10">
             <div>
-              <div className="text-xs font-bold text-amber-100 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" /> Bàn Thực Hiện Dịch Vụ Cận Lâm Sàng Chi Tiết
+              <div className="text-xs font-bold text-amber-100 uppercase tracking-widest mb-1 flex flex-wrap items-center gap-2">
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" /> Bàn Thực Hiện Dịch Vụ Cận Lâm Sàng
+                </span>
+                {user?.fullName && (
+                  <span className="bg-amber-900/50 text-amber-100 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border border-amber-300/30">
+                    Kỹ Thuật Viên: {user.fullName} ({user.email})
+                  </span>
+                )}
               </div>
               <h1 className="text-2xl md:text-3xl font-extrabold text-white flex items-center gap-3">
                 <FlaskConical className="w-8 h-8 text-amber-200" />
                 Technician Detailed Diagnostic Workspace
               </h1>
               <p className="text-xs md:text-sm text-amber-100 mt-1 max-w-2xl">
-                Nhập đầy đủ các thông số chỉ số xét nghiệm (CBC Công thức máu, Sinh hóa, Siêu âm...), hiển thị cảnh báo chỉ số Tăng/Giảm tự động và xem lại lịch sử dịch vụ hoàn tất.
+                Không gian làm việc dành riêng cho Kỹ thuật viên phụ trách phòng cận lâm sàng. Thực hiện cập nhật chỉ số, duyệt kết quả FINAL và in trả kết quả cho bệnh nhân.
               </p>
             </div>
 
@@ -449,12 +481,6 @@ export default function TechnicianTaskQueuePage() {
                         {selectedTask.patientPhone && <span>• SĐT: <strong className="font-mono">{selectedTask.patientPhone}</strong></span>}
                         {selectedTask.bookingCode && <span>• Booking: <span className="font-mono text-cyan-800 font-bold">{selectedTask.bookingCode}</span></span>}
                       </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="px-3 py-1 bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold rounded-xl">
-                        MẪU: {templateType}
-                      </span>
                     </div>
                   </div>
 
