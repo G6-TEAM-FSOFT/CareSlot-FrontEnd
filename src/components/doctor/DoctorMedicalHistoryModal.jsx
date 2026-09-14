@@ -120,8 +120,8 @@ export default function DoctorMedicalHistoryModal({
                         label="In Đơn Thuốc"
                         variant="emerald"
                         size="sm"
-                        disabled={!isVisitCompleted}
-                        disabledReason="Chỉ có thể in đơn thuốc khi đợt khám đã hoàn tất"
+                        disabled={!isVisitCompleted || !histVisit.prescription?.id}
+                        disabledReason={!isVisitCompleted ? "Chỉ có thể in đơn thuốc khi đợt khám đã hoàn tất" : "Đợt khám chưa có đơn thuốc điện tử"}
                       />
 
                       <PdfPrintButton

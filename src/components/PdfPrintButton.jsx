@@ -111,6 +111,9 @@ const PdfPrintButton = ({
     ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-200'
     : 'bg-teal-600 hover:bg-teal-700 text-white shadow-teal-200';
 
+  const disabledStyles = 'bg-slate-100 text-slate-400 border border-slate-300 opacity-60 cursor-not-allowed shadow-none hover:bg-slate-100 hover:text-slate-400 select-none';
+  const enabledStyles = `${variantStyles} cursor-pointer active:scale-95`;
+
   const isBtnDisabled = loading || disabled;
 
   return (
@@ -119,7 +122,7 @@ const PdfPrintButton = ({
       onClick={handlePrint}
       disabled={isBtnDisabled}
       title={disabled ? (disabledReason || 'Chỉ khả dụng khi đợt khám đã hoàn tất') : (title || '')}
-      className={`${baseStyles} ${sizeStyles} ${variantStyles} ${disabled ? 'opacity-50 cursor-not-allowed active:scale-100 hover:opacity-50' : 'cursor-pointer active:scale-95'} ${className}`}
+      className={`${baseStyles} ${sizeStyles} ${disabled ? disabledStyles : enabledStyles} ${className}`}
     >
       {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Printer className="w-3.5 h-3.5" />}
       <span>{label || getDefaultLabel()}</span>
