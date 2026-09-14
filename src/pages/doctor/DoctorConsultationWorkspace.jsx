@@ -169,18 +169,16 @@ export default function DoctorConsultationWorkspace() {
             if (prev && list.some(e => e.id === prev.id)) {
               return list.find(e => e.id === prev.id);
             }
+            if (prev && prev.id) {
+              return prev;
+            }
             return list[0];
           });
-        } else {
-          setSelectedEncounter(null);
-          setVisit(null);
         }
       }
     } catch (err) {
       console.error('Lỗi lấy hàng chờ bác sĩ:', err);
       setQueue([]);
-      setSelectedEncounter(null);
-      setVisit(null);
     } finally {
       setFetchingQueue(false);
     }
@@ -188,7 +186,6 @@ export default function DoctorConsultationWorkspace() {
 
   const fetchVisitDetail = async (vId) => {
     setLoading(true);
-    setVisit(null);
     try {
       const res = await outpatientService.getVisitDetail(vId);
       if (res && res.data) {
@@ -220,7 +217,6 @@ export default function DoctorConsultationWorkspace() {
       }
     } catch (err) {
       console.error('Lỗi nạp chi tiết đợt khám:', err);
-      setVisit(null);
     } finally {
       setLoading(false);
     }
@@ -238,7 +234,7 @@ export default function DoctorConsultationWorkspace() {
         setVisit(res.data);
         setSelectedEncounter(prev => prev && prev.id === targetEnc.id ? { ...prev, status: 'IN_PROGRESS' } : { ...targetEnc, status: 'IN_PROGRESS' });
         setMessage({ type: 'success', text: `Đã bắt đầu khám cho bệnh nhân ${targetEnc.patientName || 'bệnh nhân'}! Trạng thái Encounter chuyển sang IN_PROGRESS.` });
-        fetchRoomQueue(queueTab);
+        fetchRoomQueue(selectedRoomId, queueTab);
       }
     } catch (err) {
       console.error('Lỗi khi bắt đầu khám:', err);
@@ -290,7 +286,12 @@ export default function DoctorConsultationWorkspace() {
 
       setSelectedEncounter(prev => prev ? { ...prev, status: 'IN_PROGRESS' } : null);
       setMessage({ type: 'success', text: `Đã lưu thành công Chỉ số sinh tồn & Bệnh sử lâm sàng! Trạng thái chuyển sang ĐANG KHÁM (IN_PROGRESS).` });
-      await fetchRoomQueue(selectedRoomId, queueTab);
+      
+      if (queueTab === 'WAITING') {
+        setQueueTab('IN_PROGRESS');
+      } else {
+        await fetchRoomQueue(selectedRoomId, queueTab);
+      }
     } catch (err) {
       console.error(err);
       setMessage({ type: 'error', text: 'Lỗi lưu thông tin sinh tồn: ' + (err.message || err.response?.data?.message || 'Không thể lưu') });

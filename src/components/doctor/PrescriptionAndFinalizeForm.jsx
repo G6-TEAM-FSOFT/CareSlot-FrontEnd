@@ -39,6 +39,8 @@ export default function PrescriptionAndFinalizeForm({
             label="In Đơn Thuốc"
             variant="emerald"
             size="sm"
+            disabled={visit.status !== 'COMPLETED' || !visit.prescription?.id}
+            disabledReason={visit.status !== 'COMPLETED' ? "Chỉ có thể in đơn thuốc khi đợt khám đã hoàn tất (COMPLETED)" : "Đợt khám chưa có đơn thuốc điện tử"}
           />
 
           <PdfPrintButton
@@ -48,6 +50,8 @@ export default function PrescriptionAndFinalizeForm({
             label="Tổng Hợp Lượt Khám"
             variant="secondary"
             size="sm"
+            disabled={visit.status !== 'COMPLETED'}
+            disabledReason="Chỉ có thể in tổng hợp đợt khám khi đợt khám đã hoàn tất (COMPLETED)"
           />
 
           {visit.status !== 'COMPLETED' && (
