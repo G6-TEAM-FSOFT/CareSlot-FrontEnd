@@ -495,32 +495,38 @@ export default function DoctorConsultationWorkspace() {
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
 
-        {/* Banner Title Header */}
-        <div className="bg-gradient-to-r from-teal-700 via-emerald-600 to-teal-800 text-white rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-md">
-          <div className="flex flex-wrap items-center justify-between gap-4 relative z-10">
+        {/* Professional Clinical Header Card */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-teal-50 border border-teal-200 text-teal-700 flex items-center justify-center flex-shrink-0">
+              <Stethoscope className="w-6 h-6" />
+            </div>
             <div>
-              <div className="text-xs font-bold text-teal-100 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" /> Bàn Khám Bác Sĩ & Trợ Lý Y Tế
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-extrabold text-teal-800 uppercase tracking-wider bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                  Bàn Khám Ngoại Trú
+                </span>
+                {user?.fullName && (
+                  <span className="text-xs text-slate-500 font-mono">
+                    BS: <strong>{user.fullName}</strong> ({user.email})
+                  </span>
+                )}
               </div>
-              <h1 className="text-2xl md:text-3xl font-extrabold flex items-center gap-3">
-                <Stethoscope className="w-8 h-8 text-teal-200" />
-                {user?.fullName ? `Bàn Khám: ${user.fullName}` : 'Doctor & Assistant Consultation Workspace'}
+              <h1 className="text-xl font-extrabold text-slate-900 mt-0.5">
+                {user?.fullName ? `Phòng Khám: ${user.fullName}` : 'Doctor & Assistant Consultation Workspace'}
               </h1>
-              <p className="text-xs md:text-sm text-teal-100 mt-1 max-w-2xl">
-                Khám lâm sàng, nhập chỉ số sinh tồn, bệnh sử ban đầu, chỉ định Cận lâm sàng (CLS Round 1 & Round 2), nhận KQ real-time từ KTV và kê đơn thuốc điện tử.
-              </p>
             </div>
+          </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => fetchRoomQueue(selectedRoomId, queueTab)}
-                disabled={fetchingQueue}
-                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl border border-white/20 backdrop-blur-md transition-all flex items-center gap-2"
-              >
-                <RefreshCw className={`w-4 h-4 text-teal-200 ${fetchingQueue ? 'animate-spin' : ''}`} />
-                Làm mới hàng chờ
-              </button>
-            </div>
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => fetchRoomQueue(selectedRoomId, queueTab)}
+              disabled={fetchingQueue}
+              className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl border border-slate-300 transition flex items-center gap-2 active:scale-95"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-slate-600 ${fetchingQueue ? 'animate-spin' : ''}`} />
+              Làm mới hàng chờ
+            </button>
           </div>
         </div>
 

@@ -329,39 +329,38 @@ export default function TechnicianTaskQueuePage() {
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
 
-        {/* Banner Title Header */}
-        <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-md">
-          <div className="flex flex-wrap items-center justify-between gap-4 relative z-10">
+        {/* Professional Diagnostic Header Card */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center flex-shrink-0">
+              <FlaskConical className="w-6 h-6" />
+            </div>
             <div>
-              <div className="text-xs font-bold text-amber-100 uppercase tracking-widest mb-1 flex flex-wrap items-center gap-2">
-                <span className="flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5" /> Bàn Thực Hiện Dịch Vụ Cận Lâm Sàng
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-extrabold text-amber-800 uppercase tracking-wider bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                  Bàn Kỹ Thuật Viên Cận Lâm Sàng
                 </span>
                 {user?.fullName && (
-                  <span className="bg-amber-900/50 text-amber-100 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border border-amber-300/30">
-                    Kỹ Thuật Viên: {user.fullName} ({user.email})
+                  <span className="text-xs text-slate-500 font-mono">
+                    KTV: <strong>{user.fullName}</strong> ({user.email})
                   </span>
                 )}
               </div>
-              <h1 className="text-2xl md:text-3xl font-extrabold text-white flex items-center gap-3">
-                <FlaskConical className="w-8 h-8 text-amber-200" />
-                Technician Detailed Diagnostic Workspace
+              <h1 className="text-xl font-extrabold text-slate-900 mt-0.5">
+                Workspace Kỹ Thuật Viên Cận Lâm Sàng & Duyệt KQ
               </h1>
-              <p className="text-xs md:text-sm text-amber-100 mt-1 max-w-2xl">
-                Không gian làm việc dành riêng cho Kỹ thuật viên phụ trách phòng cận lâm sàng. Thực hiện cập nhật chỉ số, duyệt kết quả FINAL và in trả kết quả cho bệnh nhân.
-              </p>
             </div>
+          </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={fetchTasks}
-                disabled={fetchingTasks}
-                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl border border-white/20 backdrop-blur-md transition-all flex items-center gap-2"
-              >
-                <RefreshCw className={`w-4 h-4 text-amber-200 ${fetchingTasks ? 'animate-spin' : ''}`} />
-                Làm mới danh sách
-              </button>
-            </div>
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={fetchTasks}
+              disabled={fetchingTasks}
+              className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl border border-slate-300 transition flex items-center gap-2 active:scale-95"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-slate-600 ${fetchingTasks ? 'animate-spin' : ''}`} />
+              Làm mới danh sách
+            </button>
           </div>
         </div>
 

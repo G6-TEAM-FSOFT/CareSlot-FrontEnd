@@ -1,74 +1,67 @@
 import React from 'react';
-import { Search, Sparkles, MapPin, CalendarCheck, ShieldCheck } from 'lucide-react';
+import { Search, Calendar, ShieldCheck, Stethoscope, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const HomePage = () => {
   return (
-    <div className="space-y-16">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-indigo-950 text-white rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
-        <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 bg-indigo-500/30 backdrop-blur-md border border-indigo-400/30 text-indigo-200 text-xs font-semibold px-3 py-1 rounded-full mb-6">
-            <Sparkles className="w-3.5 h-3.5" />
-            Nền tảng đặt lịch khám đa phòng khám CareSlot
+    <div className="max-w-5xl mx-auto space-y-6 py-4">
+      {/* Ultra-Simple Clean Hero Section */}
+      <section className="bg-white border border-slate-200 rounded-2xl p-6 md:p-10 text-slate-900 shadow-xs space-y-6">
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-800 text-xs font-bold px-3 py-1 rounded-lg">
+            <Stethoscope className="w-4 h-4 text-teal-600" />
+            Hệ Thống Đặt Lịch Khám Ngoại Trú CareSlot
           </div>
-          <h1 className="text-3xl md:text-5xl font-extrabold leading-tight tracking-tight mb-4">
-            Đặt Lịch Khám Nhanh <br /><span className="text-emerald-400">Giữ Ca Trống Tức Thì</span>
+          <h1 className="text-2xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-snug">
+            Đặt Lịch Khám Bệnh Nhanh &amp; Giữ Slot Khám Tức Thì
           </h1>
-          <p className="text-indigo-200 text-base mb-8">
-            Tìm kiếm phòng khám uy tín, so sánh giá dịch vụ, AI gợi ý chuyên khoa phù hợp và thanh toán đặt cọc xác nhận lịch chỉ trong vài thao tác.
+          <p className="text-slate-600 text-xs md:text-sm max-w-2xl leading-relaxed">
+            Tra cứu thông tin phòng khám, chọn bác sĩ chuyên khoa và đăng ký ca khám chủ động mà không phải xếp hàng chờ đợi.
           </p>
+        </div>
 
-          {/* Quick Search */}
-          <div className="flex flex-col sm:flex-row gap-3 bg-white/10 backdrop-blur-md p-2 rounded-2xl border border-white/20">
-            <div className="flex-1 flex items-center px-4 bg-white/10 rounded-xl text-white">
-              <Search className="w-5 h-5 text-indigo-300 mr-2" />
-              <input
-                type="text"
-                placeholder="Nhập tên phòng khám, chuyên khoa..."
-                className="w-full bg-transparent border-none focus:outline-none text-white placeholder-indigo-300 text-sm py-2.5"
-              />
-            </div>
-            <Link
-              to="/clinics"
-              className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-2.5 rounded-xl flex items-center justify-center transition"
-            >
-              Tìm Kiếm
-            </Link>
-          </div>
+        {/* Simple Direct Action & Search Bar */}
+        <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+          <Link
+            to="/clinics"
+            className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white text-xs font-extrabold px-6 py-3 rounded-xl shadow-xs transition flex items-center justify-center gap-2 active:scale-95"
+          >
+            <span>XEM DANH SÁCH PHÒNG KHÁM</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </section>
 
-      {/* Highlights */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start gap-4">
-          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-            <Sparkles className="w-6 h-6" />
+      {/* Minimalist 3-Step Feature Overview */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-1.5 shadow-xs">
+          <div className="flex items-center gap-2 text-teal-700 font-extrabold text-sm">
+            <Calendar className="w-4 h-4 text-teal-600" />
+            <span>1. Chọn Ca Khám</span>
           </div>
-          <div>
-            <h3 className="font-bold text-slate-800 text-base mb-1">AI Specialty Suggestion</h3>
-            <p className="text-slate-500 text-sm">Nhập mô tả triệu chứng, AI tự động phân tích và đề xuất chuyên khoa khám chính xác.</p>
-          </div>
+          <p className="text-slate-600 text-xs leading-relaxed">
+            Đăng ký khung giờ phù hợp với bác sĩ chuyên khoa mong muốn.
+          </p>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start gap-4">
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-            <CalendarCheck className="w-6 h-6" />
+        <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-1.5 shadow-xs">
+          <div className="flex items-center gap-2 text-teal-700 font-extrabold text-sm">
+            <ShieldCheck className="w-4 h-4 text-teal-600" />
+            <span>2. Đặt Cọc Giữ Slot</span>
           </div>
-          <div>
-            <h3 className="font-bold text-slate-800 text-base mb-1">Hold Slot 10 Phút</h3>
-            <p className="text-slate-500 text-sm">Hệ thống tạm giữ ca khám trong 10 phút để người dùng hoàn tất thanh toán deposit an toàn.</p>
-          </div>
+          <p className="text-slate-600 text-xs leading-relaxed">
+            Hệ thống tạm giữ ca khám 10 phút để xác nhận lịch hẹn chính thức.
+          </p>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start gap-4">
-          <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
-            <ShieldCheck className="w-6 h-6" />
+        <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-1.5 shadow-xs">
+          <div className="flex items-center gap-2 text-teal-700 font-extrabold text-sm">
+            <Stethoscope className="w-4 h-4 text-teal-600" />
+            <span>3. Check-in &amp; Khám</span>
           </div>
-          <div>
-            <h3 className="font-bold text-slate-800 text-base mb-1">Xác Nhận Check-in</h3>
-            <p className="text-slate-500 text-sm">Bệnh nhân chỉ cần đến đúng ca và thực hiện Check-in trực tiếp tại Clinic Partner.</p>
-          </div>
+          <p className="text-slate-600 text-xs leading-relaxed">
+            Đến đúng giờ và đọc mã lịch hẹn tại quầy Lễ tân tiếp đón.
+          </p>
         </div>
       </section>
     </div>

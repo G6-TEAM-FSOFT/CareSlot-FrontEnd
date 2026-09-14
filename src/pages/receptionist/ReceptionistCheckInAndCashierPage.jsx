@@ -276,32 +276,33 @@ export default function ReceptionistCheckInAndCashierPage() {
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         
-        {/* Banner / Title Header */}
-        <div className="bg-gradient-to-r from-cyan-700 via-teal-600 to-cyan-800 text-white rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-md">
-          <div className="flex flex-wrap items-center justify-between gap-4 relative z-10">
+        {/* Professional Reception & Cashier Header Card */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-700 flex items-center justify-center flex-shrink-0">
+              <Shield className="w-6 h-6" />
+            </div>
             <div>
-              <div className="text-xs font-bold text-cyan-100 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" /> Quầy Tiếp Nhận & Thu Ngân Nhanh
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-extrabold text-cyan-800 uppercase tracking-wider bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
+                  Quầy Tiếp Nhận &amp; Thu Ngân
+                </span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-extrabold flex items-center gap-3">
-                <Shield className="w-8 h-8 text-cyan-200" />
-                Lễ Tân & Thu Ngân (Receptionist & Cashier Portal)
+              <h1 className="text-xl font-extrabold text-slate-900 mt-0.5">
+                Cổng Lễ Tân Tiếp Đón &amp; Thu Tiền Hóa Đơn (Receptionist &amp; Cashier)
               </h1>
-              <p className="text-xs md:text-sm text-cyan-100 mt-1 max-w-2xl">
-                Tiếp nhận bệnh nhân đã đặt lịch hẹn, cấp đợt khám (Visit), theo dõi tiến trình khám bệnh realtime và thu tiền các hóa đơn cận lâm sàng.
-              </p>
             </div>
+          </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => fetchAppointments(listTab)}
-                disabled={fetchingApts}
-                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl border border-white/20 backdrop-blur-md transition-all flex items-center gap-2"
-              >
-                <RefreshCw className={`w-4 h-4 text-cyan-200 ${fetchingApts ? 'animate-spin' : ''}`} />
-                Làm mới danh sách
-              </button>
-            </div>
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => fetchAppointments(listTab)}
+              disabled={fetchingApts}
+              className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl border border-slate-300 transition flex items-center gap-2 active:scale-95"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-slate-600 ${fetchingApts ? 'animate-spin' : ''}`} />
+              Làm mới danh sách
+            </button>
           </div>
         </div>
 
