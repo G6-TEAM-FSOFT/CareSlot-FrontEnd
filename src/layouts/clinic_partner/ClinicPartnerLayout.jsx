@@ -9,7 +9,8 @@ import {
   LogOut,
   Home,
   ShieldCheck,
-  Hospital
+  Hospital,
+  DoorOpen
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -37,6 +38,11 @@ export const ClinicPartnerLayout = () => {
       to: '/clinic-partner/doctors',
       label: 'Quản lý Bác sĩ',
       icon: UserCheck,
+    },
+    {
+      to: '/clinic-partner/rooms',
+      label: 'Quản lý Phòng khám',
+      icon: DoorOpen,
     },
     {
       to: '/clinic-partner/slots',

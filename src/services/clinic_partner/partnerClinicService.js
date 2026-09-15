@@ -7,4 +7,7 @@ export const partnerClinicService = {
   updateClinicProfile: async (clinicData) => {
     return await api.put('/partner/clinic', clinicData);
   },
+  getClinicRooms: async () => {
+    return await api.get('/partner/clinic/rooms');
+  },
 };

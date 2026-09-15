@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { UserCheck, Plus, Edit, RefreshCw, AlertCircle, CheckCircle2, Stethoscope, ToggleLeft, ToggleRight, DollarSign } from 'lucide-react';
+import { UserCheck, Plus, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { partnerDoctorService } from '../../services/clinic_partner/partnerDoctorService';
 import { partnerSpecialtyService } from '../../services/clinic_partner/partnerSpecialtyService';
-import { DoctorFormModal } from './DoctorFormModal';
+import { partnerAppointmentService } from '../../services/clinic_partner/partnerAppointmentService';
+import { partnerSlotService } from '../../services/clinic_partner/partnerSlotService';
+import { DoctorCard } from '../../components/clinic_partner/DoctorCard';
+import { DoctorFormModal } from '../../components/clinic_partner/DoctorFormModal';
+import { DoctorDetailModal } from '../../components/clinic_partner/DoctorDetailModal';
 
 export const DoctorListPage = () => {
   const [doctors, setDoctors] = useState([]);
@@ -14,9 +18,28 @@ export const DoctorListPage = () => {
   const [selectedSpecialtyId, setSelectedSpecialtyId] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
 
+  // Modal State (Create / Edit Doctor)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Detail Modal State (Doctor Profile, Slots & Appointments)
+  const [selectedDoctorForDetail, setSelectedDoctorForDetail] = useState(null);
+  const [doctorAppointments, setDoctorAppointments] = useState([]);
+  const [loadingDoctorAppointments, setLoadingDoctorAppointments] = useState(false);
+  const [doctorSlots, setDoctorSlots] = useState([]);
+  const [loadingDoctorSlots, setLoadingDoctorSlots] = useState(false);
+  const [timeFilter, setTimeFilter] = useState('PRESENT_FUTURE'); // 'PRESENT_FUTURE' | 'ALL'
+  const [appointmentStatusFilter, setAppointmentStatusFilter] = useState('');
+
+  const statusBadgeConfig = {
+    CONFIRMED: { label: 'Đã xác nhận', bg: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+    CHECKED_IN: { label: 'Đã vào khám', bg: 'bg-blue-100 text-blue-800 border-blue-200' },
+    COMPLETED: { label: 'Hoàn thành', bg: 'bg-purple-100 text-purple-800 border-purple-200' },
+    PENDING_PAYMENT: { label: 'Chờ thanh toán', bg: 'bg-amber-100 text-amber-800 border-amber-200' },
+    CANCELLED: { label: 'Đã hủy', bg: 'bg-red-100 text-red-800 border-red-200' },
+    REJECTED: { label: 'Từ chối / Quá giờ', bg: 'bg-gray-100 text-gray-800 border-gray-200' }
+  };
 
   const loadData = async () => {
     try {
@@ -29,7 +52,7 @@ export const DoctorListPage = () => {
       setSpecialties(Array.isArray(spList) ? spList : []);
 
       // Load partner doctors
-      const params = {};
+      const params = { size: 100 };
       if (selectedSpecialtyId) params.specialtyId = selectedSpecialtyId;
       if (selectedStatus) params.status = selectedStatus;
 
@@ -47,6 +70,54 @@ export const DoctorListPage = () => {
   useEffect(() => {
     loadData();
   }, [selectedSpecialtyId, selectedStatus]);
+
+  const loadDoctorAppointments = async (doctor, filterMode = timeFilter) => {
+    if (!doctor) return;
+    try {
+      setLoadingDoctorAppointments(true);
+      const todayStr = new Date().toISOString().split('T')[0];
+      const params = { doctorId: doctor.id, size: 100 };
+      if (filterMode === 'PRESENT_FUTURE') {
+        params.fromDate = todayStr;
+      }
+      const res = await partnerAppointmentService.getAppointments(params);
+      const appList = res.data?.content || res.data || res;
+      setDoctorAppointments(Array.isArray(appList) ? appList : []);
+    } catch (err) {
+      console.error('Failed to load doctor appointments', err);
+      setDoctorAppointments([]);
+    } finally {
+      setLoadingDoctorAppointments(false);
+    }
+  };
+
+  const loadDoctorSlots = async (doctor) => {
+    if (!doctor) return;
+    try {
+      setLoadingDoctorSlots(true);
+      const res = await partnerSlotService.getSlots({ doctorId: doctor.id });
+      const slotList = res.data || res;
+      setDoctorSlots(Array.isArray(slotList) ? slotList : []);
+    } catch (err) {
+      console.error('Failed to load doctor slots', err);
+      setDoctorSlots([]);
+    } finally {
+      setLoadingDoctorSlots(false);
+    }
+  };
+
+  const handleOpenDoctorDetail = (doctor) => {
+    setSelectedDoctorForDetail(doctor);
+    setTimeFilter('PRESENT_FUTURE');
+    setAppointmentStatusFilter('');
+    loadDoctorAppointments(doctor, 'PRESENT_FUTURE');
+    loadDoctorSlots(doctor);
+  };
+
+  const handleTimeFilterChange = (newMode) => {
+    setTimeFilter(newMode);
+    loadDoctorAppointments(selectedDoctorForDetail, newMode);
+  };
 
   const handleOpenCreateModal = () => {
     setEditingDoctor(null);
@@ -115,7 +186,7 @@ export const DoctorListPage = () => {
             <h1 className="text-2xl font-bold text-slate-900">Quản lý Hồ sơ Bác sĩ</h1>
           </div>
           <p className="text-sm text-slate-500 mt-1">
-            Thêm, chỉnh sửa thông tin, giá khám và trạng thái tiếp nhận của bác sĩ thuộc phòng khám.
+            Thêm, chỉnh sửa thông tin, giá khám và theo dõi lịch hẹn khám của bác sĩ thuộc phòng khám.
           </p>
         </div>
 
@@ -202,105 +273,19 @@ export const DoctorListPage = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {doctors.map((doctor) => (
-            <div
+            <DoctorCard
               key={doctor.id}
-              className="bg-white border border-slate-200 hover:border-cyan-500 rounded-2xl p-6 transition duration-200 shadow-sm hover:shadow-md flex flex-col justify-between"
-            >
-              <div className="space-y-4">
-                {/* Doctor Avatar & Status */}
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 overflow-hidden flex items-center justify-center font-bold text-white shadow-sm">
-                      {doctor.avatarUrl ? (
-                        <img src={doctor.avatarUrl} alt={doctor.fullName} className="w-full h-full object-cover" />
-                      ) : (
-                        <span>{doctor.fullName?.charAt(0) || 'D'}</span>
-                      )}
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-cyan-700">{doctor.title || 'BS'}</span>
-                      <h3 className="text-base font-bold text-slate-900 leading-tight">{doctor.fullName}</h3>
-                    </div>
-                  </div>
-
-                  <span
-                    className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${doctor.status === 'ACTIVE'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : 'bg-red-50 text-red-700 border-red-200'
-                      }`}
-                  >
-                    {doctor.status || 'ACTIVE'}
-                  </span>
-                </div>
-
-                {/* Specialty & Fee */}
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500 flex items-center gap-1.5 font-medium">
-                      <Stethoscope className="w-3.5 h-3.5 text-cyan-600" />
-                      Chuyên khoa:
-                    </span>
-                    <span className="font-semibold text-slate-900">
-                      {doctor.specialtyName || doctor.specialty?.name || 'N/A'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500 flex items-center gap-1.5 font-medium">
-                      <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
-                      Giá khám:
-                    </span>
-                    <span className="font-bold text-emerald-700">
-                      {formatCurrency(doctor.consultationFee)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Bio snippet */}
-                {doctor.bio && (
-                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed italic">
-                    "{doctor.bio}"
-                  </p>
-                )}
-              </div>
-
-              {/* Actions Footer */}
-              <div className="pt-4 mt-6 border-t border-slate-100 flex items-center justify-between">
-                <button
-                  onClick={() => handleToggleStatus(doctor)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition ${doctor.status === 'ACTIVE'
-                      ? 'text-amber-700 hover:bg-amber-50 border-amber-200'
-                      : 'text-emerald-700 hover:bg-emerald-50 border-emerald-200'
-                    }`}
-                  title="Đổi trạng thái tiếp nhận"
-                >
-                  {doctor.status === 'ACTIVE' ? (
-                    <>
-                      <ToggleRight className="w-4 h-4 text-amber-600" />
-                      <span>Tắt khám</span>
-                    </>
-                  ) : (
-                    <>
-                      <ToggleLeft className="w-4 h-4 text-emerald-600" />
-                      <span>Bật khám</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => handleOpenEditModal(doctor)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-cyan-700 hover:text-cyan-800 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-200 transition"
-                >
-                  <Edit className="w-3.5 h-3.5" />
-                  <span>Sửa hồ sơ</span>
-                </button>
-              </div>
-            </div>
+              doctor={doctor}
+              formatCurrency={formatCurrency}
+              onDetail={handleOpenDoctorDetail}
+              onToggleStatus={handleToggleStatus}
+              onEdit={handleOpenEditModal}
+            />
           ))}
         </div>
       )}
 
-      {/* Doctor Modal */}
+      {/* Doctor Form Modal */}
       <DoctorFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -308,6 +293,24 @@ export const DoctorListPage = () => {
         initialData={editingDoctor}
         isSaving={isSaving}
       />
+
+      {/* Doctor Detail & Appointments Modal */}
+      <DoctorDetailModal
+        selectedDoctor={selectedDoctorForDetail}
+        onClose={() => setSelectedDoctorForDetail(null)}
+        formatCurrency={formatCurrency}
+        timeFilter={timeFilter}
+        onTimeFilterChange={handleTimeFilterChange}
+        statusBadgeConfig={statusBadgeConfig}
+        appointments={doctorAppointments}
+        loadingAppointments={loadingDoctorAppointments}
+        doctorSlots={doctorSlots}
+        loadingDoctorSlots={loadingDoctorSlots}
+        appointmentStatusFilter={appointmentStatusFilter}
+        setAppointmentStatusFilter={setAppointmentStatusFilter}
+      />
     </div>
   );
 };
+
+export default DoctorListPage;
