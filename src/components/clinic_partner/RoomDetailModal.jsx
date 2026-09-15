@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
-  RefreshCw, Calendar, Filter, User, Stethoscope, ExternalLink
+  RefreshCw, Calendar, Filter, User, Stethoscope, ExternalLink, Clock, CalendarClock
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -9,17 +9,35 @@ export const RoomDetailModal = ({
   onClose,
   roomTypeLabels,
   statusBadgeConfig,
-  appointments,
-  loadingAppointments,
+  appointments = [],
+  loadingAppointments = false,
+  roomSlots = [],
+  loadingSlots = false,
   appointmentStatusFilter,
   setAppointmentStatusFilter
 }) => {
+  const [activeTab, setActiveTab] = useState('SLOTS'); // 'SLOTS' | 'APPOINTMENTS'
+  const [slotDateFilter, setSlotDateFilter] = useState('TODAY'); // 'TODAY' | 'ALL'
+  const [slotStatusFilter, setSlotStatusFilter] = useState('');
+
   if (!selectedRoom) return null;
 
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  // Filter slots
+  const filteredSlots = roomSlots.filter(s => {
+    if (slotDateFilter === 'TODAY' && s.appointmentDate !== todayStr) return false;
+    if (slotStatusFilter && s.status !== slotStatusFilter) return false;
+    return true;
+  });
+
+  // Filter appointments
   const filteredAppointments = appointments.filter(app => {
     if (!appointmentStatusFilter) return true;
     return app.status === appointmentStatusFilter;
   });
+
+  const todaySlotsCount = roomSlots.filter(s => s.appointmentDate === todayStr).length;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
@@ -55,7 +73,7 @@ export const RoomDetailModal = ({
               <span className="font-semibold text-gray-800">{roomTypeLabels[selectedRoom.roomType] || selectedRoom.roomType}</span>
             </div>
             <div>
-              <span className="text-gray-500">Trạng thái phòng: </span>
+              <span className="text-gray-500">Trạng thái: </span>
               <span className={`font-semibold ${selectedRoom.status === 'ACTIVE' ? 'text-emerald-600' : 'text-red-600'}`}>
                 {selectedRoom.status === 'ACTIVE' ? 'Hoạt động' : 'Tạm dừng'}
               </span>
@@ -75,116 +93,261 @@ export const RoomDetailModal = ({
           </div>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="px-6 py-3 border-b border-gray-100 flex items-center justify-between gap-2 overflow-x-auto">
-          <span className="text-xs font-bold text-gray-500 flex items-center gap-1">
-            <Filter className="w-3.5 h-3.5" /> Lọc trạng thái:
-          </span>
-          <div className="flex items-center gap-1.5">
-            {[
-              { key: '', label: 'Tất cả' },
-              { key: 'CONFIRMED', label: 'Đã xác nhận' },
-              { key: 'CHECKED_IN', label: 'Đã vào khám' },
-              { key: 'COMPLETED', label: 'Hoàn thành' },
-              { key: 'PENDING_PAYMENT', label: 'Chờ thanh toán' },
-              { key: 'CANCELLED', label: 'Đã hủy' }
-            ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setAppointmentStatusFilter(tab.key)}
-                className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
-                  appointmentStatusFilter === tab.key 
-                    ? 'bg-indigo-600 text-white font-bold' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+        {/* Navigation Tabs */}
+        <div className="px-6 bg-white border-b border-gray-200 flex items-center gap-4">
+          <button
+            onClick={() => setActiveTab('SLOTS')}
+            className={`py-3 px-1 text-xs font-bold border-b-2 flex items-center gap-2 transition-colors ${
+              activeTab === 'SLOTS'
+                ? 'border-indigo-600 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-800'
+            }`}
+          >
+            <Clock className="w-4 h-4" />
+            <span>Lịch làm việc / Ca khám ({todaySlotsCount} hôm nay)</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('APPOINTMENTS')}
+            className={`py-3 px-1 text-xs font-bold border-b-2 flex items-center gap-2 transition-colors ${
+              activeTab === 'APPOINTMENTS'
+                ? 'border-indigo-600 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-800'
+            }`}
+          >
+            <Calendar className="w-4 h-4" />
+            <span>Lịch hẹn bệnh nhân ({appointments.length})</span>
+          </button>
         </div>
 
-        {/* Appointments Body List */}
-        <div className="p-6 overflow-y-auto flex-1">
-          {loadingAppointments ? (
-            <div className="py-12 text-center text-gray-500 flex flex-col items-center gap-2">
-              <RefreshCw className="w-7 h-7 animate-spin text-indigo-600" />
-              <p className="text-sm">Đang nạp danh sách lịch hẹn của phòng...</p>
+        {/* Tab 1: Slots Content */}
+        {activeTab === 'SLOTS' && (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Slot Filters Toolbar */}
+            <div className="px-6 py-2.5 bg-slate-50 border-b border-gray-100 flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-gray-600">Thời gian:</span>
+                <button
+                  onClick={() => setSlotDateFilter('TODAY')}
+                  className={`px-2.5 py-1 rounded-md font-semibold transition ${
+                    slotDateFilter === 'TODAY'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  Hôm nay ({todayStr})
+                </button>
+                <button
+                  onClick={() => setSlotDateFilter('ALL')}
+                  className={`px-2.5 py-1 rounded-md font-semibold transition ${
+                    slotDateFilter === 'ALL'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  Tất cả ca khám
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-gray-600">Trạng thái:</span>
+                <select
+                  value={slotStatusFilter}
+                  onChange={(e) => setSlotStatusFilter(e.target.value)}
+                  className="bg-white border border-gray-200 rounded-md px-2 py-1 text-xs font-medium text-gray-700"
+                >
+                  <option value="">Tất cả</option>
+                  <option value="AVAILABLE">AVAILABLE (Trống)</option>
+                  <option value="HELD">HELD (Đang giữ chỗ)</option>
+                  <option value="BOOKED">BOOKED (Đã được đặt)</option>
+                  <option value="OVER_DATE">OVER_DATE (Quá hạn)</option>
+                </select>
+              </div>
             </div>
-          ) : filteredAppointments.length === 0 ? (
-            <div className="py-12 text-center text-gray-400 space-y-2">
-              <Calendar className="w-10 h-10 mx-auto text-gray-300" />
-              <p className="text-sm font-medium text-gray-600">Chưa có lịch hẹn nào trong phòng này</p>
-              <p className="text-xs text-gray-400">Các ca khám (slot) khi được bệnh nhân đăng ký sẽ tự động hiển thị tại đây.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-gray-600">
-                <thead className="bg-gray-50 text-gray-500 uppercase font-semibold text-[11px]">
-                  <tr>
-                    <th className="px-3 py-2.5 rounded-l-lg">Mã đặt khám</th>
-                    <th className="px-3 py-2.5">Bệnh nhân</th>
-                    <th className="px-3 py-2.5">Bác sĩ phụ trách</th>
-                    <th className="px-3 py-2.5">Thời gian khám</th>
-                    <th className="px-3 py-2.5">Lý do / Triệu chứng</th>
-                    <th className="px-3 py-2.5">Trạng thái</th>
-                    <th className="px-3 py-2.5 rounded-r-lg text-right">Chi tiết</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {filteredAppointments.map(app => {
-                    const badge = statusBadgeConfig[app.status] || { label: app.status, bg: 'bg-gray-100 text-gray-700' };
-                    return (
-                      <tr key={app.id} className="hover:bg-gray-50/80 transition-colors">
-                        <td className="px-3 py-3 font-mono font-bold text-indigo-600">
-                          {app.bookingCode || `#${app.id}`}
-                        </td>
-                        <td className="px-3 py-3 font-semibold text-gray-900">
-                          <div className="flex items-center gap-1.5">
-                            <User className="w-3.5 h-3.5 text-gray-400" />
-                            {app.patientName || 'N/A'}
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 text-gray-800">
-                          <div className="flex items-center gap-1.5">
-                            <Stethoscope className="w-3.5 h-3.5 text-indigo-500" />
-                            {app.doctorName || 'Chưa phân công'}
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 font-medium text-gray-900">
-                          <div>{app.appointmentDate}</div>
-                          <div className="text-[11px] text-gray-500 font-normal">
-                            {app.startTime?.substring(0, 5)} - {app.endTime?.substring(0, 5)}
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 text-gray-600 max-w-xs truncate" title={app.symptomNote}>
-                          {app.symptomNote || 'Khám tổng quát'}
-                        </td>
-                        <td className="px-3 py-3">
-                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${badge.bg}`}>
-                            {badge.label}
+
+            {/* Slots List Body */}
+            <div className="p-6 overflow-y-auto flex-1">
+              {loadingSlots ? (
+                <div className="py-12 text-center text-gray-500 flex flex-col items-center gap-2">
+                  <RefreshCw className="w-7 h-7 animate-spin text-indigo-600" />
+                  <p className="text-sm">Đang tải lịch làm việc của phòng...</p>
+                </div>
+              ) : filteredSlots.length === 0 ? (
+                <div className="py-12 text-center text-gray-400 space-y-2">
+                  <CalendarClock className="w-10 h-10 mx-auto text-gray-300" />
+                  <p className="text-sm font-medium text-gray-600">
+                    Không có ca khám nào trong phòng này {slotDateFilter === 'TODAY' ? 'ngày hôm nay' : ''}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {slotDateFilter === 'TODAY' ? 'Thử chọn "Tất cả ca khám" để xem các ca khám trong tương lai.' : ''}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {filteredSlots.map(slot => (
+                    <div
+                      key={slot.id}
+                      className="bg-white border border-gray-200 rounded-xl p-3.5 space-y-2 hover:border-indigo-400 transition shadow-sm"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-gray-900">
+                          <Clock className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>{slot.startTime} - {slot.endTime}</span>
+                        </div>
+                        <span
+                          className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                            slot.status === 'AVAILABLE'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : slot.status === 'HELD'
+                              ? 'bg-amber-50 text-amber-700 border-amber-200'
+                              : slot.status === 'BOOKED'
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : 'bg-purple-50 text-purple-700 border-purple-200'
+                          }`}
+                        >
+                          {slot.status}
+                        </span>
+                      </div>
+
+                      <div className="text-xs space-y-1 text-gray-600 border-t border-gray-100 pt-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-400 flex items-center gap-1">
+                            <Stethoscope className="w-3 h-3" /> Bác sĩ:
                           </span>
-                        </td>
-                        <td className="px-3 py-3 text-right">
-                          <Link
-                            to={`/clinic-partner/appointments/${app.id}`}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors"
-                          >
-                            Xem <ExternalLink className="w-3 h-3" />
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          <span className="font-medium text-gray-900 truncate max-w-[150px]">{slot.doctorName || `BS #${slot.doctorId}`}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-400">Ngày:</span>
+                          <span className="font-mono text-indigo-700 font-semibold">{slot.appointmentDate}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Tab 2: Appointments Content */}
+        {activeTab === 'APPOINTMENTS' && (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Filter Tabs */}
+            <div className="px-6 py-3 border-b border-gray-100 flex items-center justify-between gap-2 overflow-x-auto">
+              <span className="text-xs font-bold text-gray-500 flex items-center gap-1">
+                <Filter className="w-3.5 h-3.5" /> Lọc trạng thái:
+              </span>
+              <div className="flex items-center gap-1.5">
+                {[
+                  { key: '', label: 'Tất cả' },
+                  { key: 'CONFIRMED', label: 'Đã xác nhận' },
+                  { key: 'CHECKED_IN', label: 'Đã vào khám' },
+                  { key: 'COMPLETED', label: 'Hoàn thành' },
+                  { key: 'PENDING_PAYMENT', label: 'Chờ thanh toán' },
+                  { key: 'CANCELLED', label: 'Đã hủy' }
+                ].map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setAppointmentStatusFilter(tab.key)}
+                    className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+                      appointmentStatusFilter === tab.key 
+                        ? 'bg-indigo-600 text-white font-bold' 
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Appointments Body List */}
+            <div className="p-6 overflow-y-auto flex-1">
+              {loadingAppointments ? (
+                <div className="py-12 text-center text-gray-500 flex flex-col items-center gap-2">
+                  <RefreshCw className="w-7 h-7 animate-spin text-indigo-600" />
+                  <p className="text-sm">Đang nạp danh sách lịch hẹn của phòng...</p>
+                </div>
+              ) : filteredAppointments.length === 0 ? (
+                <div className="py-12 text-center text-gray-400 space-y-2">
+                  <Calendar className="w-10 h-10 mx-auto text-gray-300" />
+                  <p className="text-sm font-medium text-gray-600">Chưa có lịch hẹn nào trong phòng này</p>
+                  <p className="text-xs text-gray-400">Các ca khám (slot) khi được bệnh nhân đăng ký sẽ tự động hiển thị tại đây.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-gray-600">
+                    <thead className="bg-gray-50 text-gray-500 uppercase font-semibold text-[11px]">
+                      <tr>
+                        <th className="px-3 py-2.5 rounded-l-lg">Mã đặt khám</th>
+                        <th className="px-3 py-2.5">Bệnh nhân</th>
+                        <th className="px-3 py-2.5">Bác sĩ phụ trách</th>
+                        <th className="px-3 py-2.5">Thời gian khám</th>
+                        <th className="px-3 py-2.5">Lý do / Triệu chứng</th>
+                        <th className="px-3 py-2.5">Trạng thái</th>
+                        <th className="px-3 py-2.5 rounded-r-lg text-right">Chi tiết</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {filteredAppointments.map(app => {
+                        const badge = statusBadgeConfig[app.status] || { label: app.status, bg: 'bg-gray-100 text-gray-700' };
+                        return (
+                          <tr key={app.id} className="hover:bg-gray-50/80 transition-colors">
+                            <td className="px-3 py-3 font-mono font-bold text-indigo-600">
+                              {app.bookingCode || `#${app.id}`}
+                            </td>
+                            <td className="px-3 py-3 font-semibold text-gray-900">
+                              <div className="flex items-center gap-1.5">
+                                <User className="w-3.5 h-3.5 text-gray-400" />
+                                {app.patientName || 'N/A'}
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 text-gray-800">
+                              <div className="flex items-center gap-1.5">
+                                <Stethoscope className="w-3.5 h-3.5 text-indigo-500" />
+                                {app.doctorName || 'Chưa phân công'}
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 font-medium text-gray-900">
+                              <div>{app.appointmentDate}</div>
+                              <div className="text-[11px] text-gray-500 font-normal">
+                                {app.startTime?.substring(0, 5)} - {app.endTime?.substring(0, 5)}
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 text-gray-600 max-w-xs truncate" title={app.symptomNote}>
+                              {app.symptomNote || 'Khám tổng quát'}
+                            </td>
+                            <td className="px-3 py-3">
+                              <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${badge.bg}`}>
+                                {badge.label}
+                              </span>
+                            </td>
+                            <td className="px-3 py-3 text-right">
+                              <Link
+                                to={`/clinic-partner/appointments/${app.id}`}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors"
+                              >
+                                Xem <ExternalLink className="w-3 h-3" />
+                              </Link>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Modal Footer */}
         <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-          <span>Hiển thị <strong>{filteredAppointments.length}</strong> / {appointments.length} lịch hẹn</span>
+          <span>
+            {activeTab === 'SLOTS'
+              ? `Hiển thị ${filteredSlots.length} / ${roomSlots.length} ca khám`
+              : `Hiển thị ${filteredAppointments.length} / ${appointments.length} lịch hẹn`}
+          </span>
           <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-xl transition-colors"

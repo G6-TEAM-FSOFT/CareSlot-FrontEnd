@@ -3,6 +3,7 @@ import { UserCheck, Plus, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-re
 import { partnerDoctorService } from '../../services/clinic_partner/partnerDoctorService';
 import { partnerSpecialtyService } from '../../services/clinic_partner/partnerSpecialtyService';
 import { partnerAppointmentService } from '../../services/clinic_partner/partnerAppointmentService';
+import { partnerSlotService } from '../../services/clinic_partner/partnerSlotService';
 import { DoctorCard } from '../../components/clinic_partner/DoctorCard';
 import { DoctorFormModal } from '../../components/clinic_partner/DoctorFormModal';
 import { DoctorDetailModal } from '../../components/clinic_partner/DoctorDetailModal';
@@ -22,10 +23,12 @@ export const DoctorListPage = () => {
   const [editingDoctor, setEditingDoctor] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Detail Modal State (Doctor Profile & Appointments)
+  // Detail Modal State (Doctor Profile, Slots & Appointments)
   const [selectedDoctorForDetail, setSelectedDoctorForDetail] = useState(null);
   const [doctorAppointments, setDoctorAppointments] = useState([]);
   const [loadingDoctorAppointments, setLoadingDoctorAppointments] = useState(false);
+  const [doctorSlots, setDoctorSlots] = useState([]);
+  const [loadingDoctorSlots, setLoadingDoctorSlots] = useState(false);
   const [timeFilter, setTimeFilter] = useState('PRESENT_FUTURE'); // 'PRESENT_FUTURE' | 'ALL'
   const [appointmentStatusFilter, setAppointmentStatusFilter] = useState('');
 
@@ -88,11 +91,27 @@ export const DoctorListPage = () => {
     }
   };
 
+  const loadDoctorSlots = async (doctor) => {
+    if (!doctor) return;
+    try {
+      setLoadingDoctorSlots(true);
+      const res = await partnerSlotService.getSlots({ doctorId: doctor.id });
+      const slotList = res.data || res;
+      setDoctorSlots(Array.isArray(slotList) ? slotList : []);
+    } catch (err) {
+      console.error('Failed to load doctor slots', err);
+      setDoctorSlots([]);
+    } finally {
+      setLoadingDoctorSlots(false);
+    }
+  };
+
   const handleOpenDoctorDetail = (doctor) => {
     setSelectedDoctorForDetail(doctor);
     setTimeFilter('PRESENT_FUTURE');
     setAppointmentStatusFilter('');
     loadDoctorAppointments(doctor, 'PRESENT_FUTURE');
+    loadDoctorSlots(doctor);
   };
 
   const handleTimeFilterChange = (newMode) => {
@@ -285,6 +304,8 @@ export const DoctorListPage = () => {
         statusBadgeConfig={statusBadgeConfig}
         appointments={doctorAppointments}
         loadingAppointments={loadingDoctorAppointments}
+        doctorSlots={doctorSlots}
+        loadingDoctorSlots={loadingDoctorSlots}
         appointmentStatusFilter={appointmentStatusFilter}
         setAppointmentStatusFilter={setAppointmentStatusFilter}
       />

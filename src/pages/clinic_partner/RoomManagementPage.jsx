@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import partnerRoomService from '../../services/clinic_partner/partnerRoomService';
 import { partnerAppointmentService } from '../../services/clinic_partner/partnerAppointmentService';
+import { partnerSlotService } from '../../services/clinic_partner/partnerSlotService';
 import { RoomCard } from '../../components/clinic_partner/RoomCard';
 import { RoomFormModal } from '../../components/clinic_partner/RoomFormModal';
 import { RoomDetailModal } from '../../components/clinic_partner/RoomDetailModal';
@@ -27,10 +28,12 @@ export const RoomManagementPage = () => {
   const [editingRoom, setEditingRoom] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Detail Modal State (Room Appointments Detail)
+  // Detail Modal State (Room Appointments & Work Schedule Detail)
   const [selectedRoomForDetail, setSelectedRoomForDetail] = useState(null);
   const [roomAppointments, setRoomAppointments] = useState([]);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
+  const [roomSlots, setRoomSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [appointmentStatusFilter, setAppointmentStatusFilter] = useState('');
 
   // Form Fields
@@ -116,14 +119,27 @@ export const RoomManagementPage = () => {
     setAppointmentStatusFilter('');
     try {
       setLoadingAppointments(true);
-      const res = await partnerAppointmentService.getAppointments({ roomId: room.id, size: 100 });
-      const appList = res.data?.content || res.data || res;
+      setLoadingSlots(true);
+
+      const [appRes, slotRes] = await Promise.all([
+        partnerAppointmentService.getAppointments({ roomId: room.id, size: 100 }),
+        partnerSlotService.getSlots({})
+      ]);
+
+      const appList = appRes.data?.content || appRes.data || appRes;
       setRoomAppointments(Array.isArray(appList) ? appList : []);
+
+      const slotList = slotRes.data || slotRes;
+      const allSlots = Array.isArray(slotList) ? slotList : [];
+      const filteredRoomSlots = allSlots.filter(s => String(s.roomId) === String(room.id));
+      setRoomSlots(filteredRoomSlots);
     } catch (err) {
-      console.error('Failed to load room appointments', err);
+      console.error('Failed to load room details', err);
       setRoomAppointments([]);
+      setRoomSlots([]);
     } finally {
       setLoadingAppointments(false);
+      setLoadingSlots(false);
     }
   };
 
@@ -392,7 +408,7 @@ export const RoomManagementPage = () => {
         isSaving={isSaving}
       />
 
-      {/* Modal: Room Appointments Detail */}
+      {/* Modal: Room Appointments & Work Schedule Detail */}
       <RoomDetailModal
         selectedRoom={selectedRoomForDetail}
         onClose={() => setSelectedRoomForDetail(null)}
@@ -400,6 +416,8 @@ export const RoomManagementPage = () => {
         statusBadgeConfig={statusBadgeConfig}
         appointments={roomAppointments}
         loadingAppointments={loadingAppointments}
+        roomSlots={roomSlots}
+        loadingSlots={loadingSlots}
         appointmentStatusFilter={appointmentStatusFilter}
         setAppointmentStatusFilter={setAppointmentStatusFilter}
       />
