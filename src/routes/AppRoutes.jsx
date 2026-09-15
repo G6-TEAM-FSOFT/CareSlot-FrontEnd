@@ -28,6 +28,7 @@ import { ClinicProfilePage } from '../pages/clinic_partner/ClinicProfilePage';
 import { ClinicSpecialtiesPage } from '../pages/clinic_partner/ClinicSpecialtiesPage';
 import { DoctorListPage } from '../pages/clinic_partner/DoctorListPage';
 import { DoctorSchedulePage } from '../pages/clinic_partner/DoctorSchedulePage';
+import { RoomManagementPage } from '../pages/clinic_partner/RoomManagementPage';
 import { AppointmentListPage } from '../pages/clinic_partner/AppointmentListPage';
 import { AppointmentDetailPage } from '../pages/clinic_partner/AppointmentDetailPage';
 
@@ -87,6 +88,7 @@ export const AppRoutes = () => {
           <Route path="/clinic-partner/profile" element={<ClinicProfilePage />} />
           <Route path="/clinic-partner/specialties" element={<ClinicSpecialtiesPage />} />
           <Route path="/clinic-partner/doctors" element={<DoctorListPage />} />
+          <Route path="/clinic-partner/rooms" element={<RoomManagementPage />} />
           <Route path="/clinic-partner/slots" element={<DoctorSchedulePage />} />
           <Route path="/clinic-partner/appointments" element={<AppointmentListPage />} />
           <Route path="/clinic-partner/appointments/:id" element={<AppointmentDetailPage />} />

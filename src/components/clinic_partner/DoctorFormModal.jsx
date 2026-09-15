@@ -172,8 +172,8 @@ export const DoctorFormModal = ({ isOpen, onClose, onSubmit, initialData = null,
                 <option value="CKI.BS">CKI.BS (Bác sĩ CKI)</option>
                 <option value="CKII.BS">CKII.BS (Bác sĩ CKII)</option>
                 <option value="TS.BS">TS.BS (Tiến sĩ Bác sĩ)</option>
-                <option value="PGS.TS">PGS.TS (Phó Giáo giáo GS.TS)</option>
-                <option value="GS.TS.BS">GS.TS.BS (Giáo giáo GS.TS Bác sĩ)</option>
+                <option value="PGS.TS">PGS.TS (Phó Giáo sư Tiến sĩ)</option>
+                <option value="GS.TS.BS">GS.TS.BS (Giáo sư Tiến sĩ Bác sĩ)</option>
               </select>
             </div>
 
@@ -285,3 +285,5 @@ export const DoctorFormModal = ({ isOpen, onClose, onSubmit, initialData = null,
     </div>
   );
 };
+
+export default DoctorFormModal;
