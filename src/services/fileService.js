@@ -32,4 +32,17 @@ export const fileService = {
     const uploadPromises = Array.from(files).map((file) => fileService.uploadFile(file, folder));
     return await Promise.all(uploadPromises);
   },
+
+  /**
+   * Delete an image/file from S3 via backend endpoint
+   * @param {string} fileUrl - The public URL of the file to delete
+   * @returns {Promise<any>}
+   */
+  deleteFile: async (fileUrl) => {
+    if (!fileUrl) return;
+    const response = await api.delete('/files', {
+      params: { fileUrl },
+    });
+    return response.data?.data || response.data;
+  },
 };

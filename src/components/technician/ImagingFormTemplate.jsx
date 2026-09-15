@@ -48,11 +48,20 @@ export default function ImagingFormTemplate({
     }
   };
 
-  const handleRemoveImage = (indexToRemove) => {
+  const handleRemoveImage = async (indexToRemove) => {
+    const fileUrlToRemove = imageUrls[indexToRemove];
     const updatedUrls = imageUrls.filter((_, idx) => idx !== indexToRemove);
     const updatedImaging = { ...imaging, imageUrls: updatedUrls };
     setImaging(updatedImaging);
     buildImagingPayload(updatedImaging);
+
+    if (fileUrlToRemove) {
+      try {
+        await fileService.deleteFile(fileUrlToRemove);
+      } catch (err) {
+        console.warn('Không thể xóa ảnh trên S3:', err);
+      }
+    }
   };
 
   const handleDrop = (e) => {
